@@ -6,7 +6,7 @@ from torch import nn
 # TODO: rename the class of the model. if you change it remember to change the import in main.py
 
 
-class LinearRegressionModel(nn.Module):
+class SSAR(nn.Module):
     def __init__(self):
         super().__init__()
         # TODO:need to add layers

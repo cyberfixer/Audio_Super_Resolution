@@ -1,6 +1,6 @@
 # this file is the starting point for the model to run everything
 from config import CONFIG
-from model import LinearRegressionModel
+from model import SSAR
 import model
 import config
 
