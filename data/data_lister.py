@@ -5,8 +5,8 @@ import os
 
 
 def main():
-    with open('./vctk/train.txt', 'w') as f:
-        for (root, dirs, files) in os.walk('./vctk/wav48', topdown=True):
+    with open('train.txt', 'w') as f:
+        for (root, dirs, files) in os.walk('./vctk', topdown=True):
             for File in files:
                 f.write(root[-4:]+'/'+File+'\n')
     f.close()
