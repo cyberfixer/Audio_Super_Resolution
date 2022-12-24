@@ -6,7 +6,7 @@ import os
 
 def main():
     with open('train.txt', 'w') as f:
-        for (root, dirs, files) in os.walk('./vctk', topdown=True):
+        for (root, dirs, files) in os.walk('./data/vctk', topdown=True):
             for File in files:
                 f.write(root[-4:]+'/'+File+'\n')
     f.close()
@@ -14,6 +14,4 @@ def main():
 
 
 if __name__ == "__main__":
-    pass
-    #! TODO:need some testing before running it
-    # main()
+    main()
