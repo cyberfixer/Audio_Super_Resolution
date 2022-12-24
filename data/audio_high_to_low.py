@@ -4,12 +4,12 @@ from glob import glob # get full path of all files
 from tqdm import tqdm # progress bar
 import os
 
-inputFilesPath = '.\\vctk\\48k\\'
-outputFilesPath = '.\\vctk\\8k\\'
+inputFilesPath = '.\\vctk\\48k'
+outputFilesPath = '.\\vctk\\8k'
 targetsr = 8000
 
 
-folders = glob('.\\vctk\\48k\\*')
+folders = glob(inputFilesPath + '\\*')
 for folderPath in tqdm(folders, desc = 'Total'): # All folders
     for filePath in tqdm(glob(folderPath + '\\*'),desc = os.path.basename(folderPath), leave = False): # All files in each folder
 
