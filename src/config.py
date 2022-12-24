@@ -29,9 +29,8 @@ class CONFIG:
         '''
         data_dir = {'vctk': {'root': './data/vctk',
                              'train': "./data/train.txt",
-                             'trainlow': "./data/train.txt",
-                             'test': "./data/test.txt",
-                             'testlow': "./data/test.txt"},
+                             'trainlow': "./data/train.txt"
+                             },
 
                     }
         window_size = 8192  # size of the sliding window

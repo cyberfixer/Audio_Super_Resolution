@@ -5,9 +5,12 @@ import os
 
 
 def main():
-    with open('train.txt', 'w') as f:
+    with open('data/train.txt', 'w+') as f:
         for (root, dirs, files) in os.walk('./data/vctk', topdown=True):
             for File in files:
+                # print(File)
+                # print(root)
+                # print(root[-4:]+'/'+File+'\n')
                 f.write(root[-4:]+'/'+File+'\n')
     f.close()
     print("Done!")
