@@ -30,8 +30,8 @@ for folderPath in tqdm(folders, desc = 'Total'): # All folders
             os.mkdir(targetFolderPath)
 
         # Downsampling the audio
-        waveform, samplerate = librosa.load(filePath, sr=None)
-        waveformLow = librosa.resample(waveform,orig_sr=samplerate, target_sr=targetsr)
+        signal, samplerate = librosa.load(filePath, sr=None)
+        signalLow = librosa.resample(signal,orig_sr=samplerate, target_sr=targetsr)
         
         # Saving the audio file.
-        sf.write(targetFilePath ,data=waveformLow, samplerate=targetsr, format=targetFileExtension)
+        sf.write(targetFilePath ,data=signalLow, samplerate=targetsr, format=targetFileExtension)
