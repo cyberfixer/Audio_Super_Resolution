@@ -11,7 +11,12 @@ def main():
                 # print(File)
                 # print(root)
                 # print(root[-4:]+'/'+File+'\n')
-                f.write(root[-4:]+'/'+File+'\n')
+                f.write(root[-4:]+'/'+File+'\n')  # ! it is hardcoded
+                # ! there is bug with the s5 folder because it is too short
+                """
+                the inteded behavier is 
+                "folder/filename"
+                """
     f.close()
     print("Done!")
 

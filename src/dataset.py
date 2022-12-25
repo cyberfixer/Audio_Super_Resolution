@@ -72,6 +72,12 @@ class CustomDataset(Dataset):
     def __len__(self):
         return len(self.data_list_target)  # get the length of the data set
 
+    @staticmethod  # staticmethod so we can call it without an object
+    def collate_fn(batch):  # make the batch one tensor
+        data = torch.cat([item[0] for item in batch], dim=0).float()
+        target = torch.cat([item[1] for item in batch], dim=0).float()
+        return [data, target]
+
     def load_txt(self, txt_list):
         """it opens the path in txt_list and returen the content"""
         target = []
