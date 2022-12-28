@@ -18,7 +18,7 @@ def main():
     BATCH_SIZE = 32
     train_data = CustomDataset()
     train_dataloader = DataLoader(train_data,  # dataset to turn into iterable
-                                  batch_size=32,  # how many samples per batch?
+                                  batch_size=1,  # how many samples per batch?
                                   shuffle=True,  # shuffle data every epoch?
                                   collate_fn=CustomDataset.collate_fn)
     print(
@@ -27,9 +27,8 @@ def main():
     print(train_features_batch.shape, train_labels_batch.shape)
 
     for batch, (X, y) in enumerate(train_dataloader):
-        print(X)
-        print("\n")
-        print(y)
+        print(X.shape)
+        print(y.shape)
         break
 
 

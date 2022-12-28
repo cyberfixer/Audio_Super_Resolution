@@ -99,11 +99,13 @@ class CustomDataset(Dataset):
             target_sig = pad(target_sig, self.window)
 
         # stacks the windows virticlay X=(window_number, amplitude samples)
+        # there was in this sliceing numpy.newaxis
         X = frame(low_sig, self.window, self.stride)[:, :]
         # if self.mode == 'test':
         #     return X, target, low_sig # idk why you need that for testing
 
         # stacks the windows virticlay y=(window_number, amplitude samples)
+        # there was in this sliceing numpy.newaxis
         y = frame(target, self.window, self.stride)[:, :]
         return torch.tensor(X), torch.tensor(y)
 
