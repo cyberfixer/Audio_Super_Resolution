@@ -5,15 +5,21 @@ import os
 
 
 def main():
-    with open('./vctk/train.txt', 'w') as f:
-        for (root, dirs, files) in os.walk('./vctk/wav48', topdown=True):
+    with open('data/train.txt', 'w+') as f:
+        for (root, dirs, files) in os.walk('./data/vctk', topdown=True):
             for File in files:
-                f.write(root[-4:]+'/'+File+'\n')
+                # print(File)
+                # print(root)
+                # print(root[-4:]+'/'+File+'\n')
+                f.write(root[-4:]+'/'+File+'\n')  # ! it is hardcoded
+                # ! there is bug with the s5 folder because it is too short
+                """
+                the inteded behavier is 
+                "folder/filename"
+                """
     f.close()
     print("Done!")
 
 
 if __name__ == "__main__":
-    pass
-    #! TODO:need some testing before running it
-    # main()
+    main()
