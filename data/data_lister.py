@@ -2,21 +2,19 @@
 # txt files will contain releitve path for every single audio file in the dataset
 # there are two files in data folder listing them
 import os
+from tqdm import tqdm
 
 
 def main():
+    """
+    the inteded behavier is "folder/filename" 
+    """
     with open('data/train.txt', 'w+') as f:
-        for (root, dirs, files) in os.walk('./data/vctk', topdown=True):
-            for File in files:
-                # print(File)
-                # print(root)
-                # print(root[-4:]+'/'+File+'\n')
-                f.write(root[-4:]+'/'+File+'\n')  # ! it is hardcoded
-                # ! there is bug with the s5 folder because it is too short
-                """
-                the inteded behavier is 
-                "folder/filename"
-                """
+        for (root, dirs, files) in tqdm(os.walk('./data/vctk', topdown=True)):
+            for fileName in files:
+                folderName = os.path.basename(root)
+                filePath = folderName + '/' + fileName
+                f.write(filePath+"\n")
     f.close()
     print("Done!")
 
