@@ -24,7 +24,7 @@ class CONFIG:
         tfilm = False  # enable/disable TFiLM layers
         n_blocks = 64  # number of blocks of TFiLM layers.
         # bottleneck module. Should either be 'performer', 'lstm' or None
-        bottleneck_type = 'lstm'
+        bottleneck_type = 'performer'
         assert bottleneck_type in ['performer',
                                    'lstm', None], "Invalid bottleneck_type"
         # kernel sizes of each convolution/deconvolution layers

@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from config import CONFIG
 from dataset import CustomDataset
 from torch.utils.data import DataLoader
+from performer_pytorch import Performer
 # TODO: rename the class of the model. if you change it remember to change the import in main.py
 
 
@@ -38,10 +39,9 @@ class TUNet(nn.Module):
             CONFIG.MODEL.strides).prod()
 
         if CONFIG.MODEL.bottleneck_type == 'performer':
-            # self.bottleneck = Performer(dim=CONFIG.MODEL.out_channels[2], depth=CONFIG.MODEL.TRANSFORMER.depth,
-            #                             heads=CONFIG.MODEL.TRANSFORMER.heads, causal=False,
-            #                             dim_head=CONFIG.MODEL.TRANSFORMER.dim_head, local_window_size=bottleneck_size)
-            pass
+            self.bottleneck = Performer(dim=CONFIG.MODEL.out_channels[2], depth=CONFIG.MODEL.TRANSFORMER.depth,
+                                        heads=CONFIG.MODEL.TRANSFORMER.heads, causal=False,
+                                        dim_head=CONFIG.MODEL.TRANSFORMER.dim_head, local_window_size=bottleneck_size)
         elif CONFIG.MODEL.bottleneck_type == 'lstm':
             self.bottleneck = nn.LSTM(input_size=CONFIG.MODEL.out_channels[2], hidden_size=CONFIG.MODEL.out_channels[2],
                                       num_layers=CONFIG.MODEL.TRANSFORMER.depth, batch_first=True)
@@ -98,7 +98,7 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         print("x len: ", len(x))
-        x1 = F.leaky_relu(self.downconv(x), 0.2)  # 2048
+        x1 = F.leaky_relu(self.downconv(x[0]), 0.2)  # 2048
         # if self.tfilm:
         #     x1 = self.tfilm_d(x1)
         x2 = F.leaky_relu(self.downconv1(x1), 0.2)  # 1024
