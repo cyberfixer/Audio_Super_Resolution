@@ -190,10 +190,10 @@ class TFiLM(nn.Module):
         return x
 
 
-def main():
+def main():  # ! this for testing the model
     DATaset = CustomDataset()
     data_loader = DataLoader(DATaset, shuffle=False,
-                             batch_size=16, collate_fn=CustomDataset.collate_fn)
+                             batch_size=32, collate_fn=CustomDataset.collate_fn)
     model = TUNet()
 
     model.train()
