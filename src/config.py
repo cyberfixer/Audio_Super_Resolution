@@ -17,6 +17,24 @@ class CONFIG:
         val_split = 0.1
 
     class MODEL:
+        tfilm = False  # enable/disable TFiLM layers
+        n_blocks = 64  # number of blocks of TFiLM layers.
+        # bottleneck module. Should either be 'performer', 'lstm' or None
+        bottleneck_type = None
+        assert bottleneck_type in ['performer',
+                                   'lstm', None], "Invalid bottleneck_type"
+        # kernel sizes of each convolution/deconvolution layers
+        kernel_sizes = [66, 18, 8]
+        strides = [4, 4, 4]  # strides of each convolution/deconvolution layers
+        # numbers of filters of each convolution/deconvolution layers
+        out_channels = [64, 128, 256]
+
+        # Performer bottleneck config
+        class TRANSFORMER:
+            dim_head = 32
+            depth = 3
+            heads = 2
+
         class TRANSFORMER:
             pass
 
