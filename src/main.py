@@ -84,7 +84,7 @@ def testStep(testLoader):  # This is the starting point testing the model and ma
 
 
 def main():
-    BATCH_SIZE = 8
+    BATCH_SIZE = 1
     train_data = CustomDataset()
     train_dataloader = DataLoader(train_data,  # dataset to turn into iterable
                                   batch_size=BATCH_SIZE,  # how many samples per batch?
