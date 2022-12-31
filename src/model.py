@@ -34,16 +34,17 @@ class TUNet(nn.Module):
                                out_channels=CONFIG.MODEL.out_channels,
                                tfilm=CONFIG.MODEL.tfilm,
                                n_blocks=CONFIG.MODEL.n_blocks)
-        # bottleneck_size = self.hparams.max_len // np.array(
-        #     self.hparams.strides).prod()
+        bottleneck_size = CONFIG.DATA.window_size // np.array(
+            CONFIG.MODEL.strides).prod()
 
-        # if self.hparams.bottleneck_type == 'performer':
-        #     self.bottleneck = Performer(dim=self.hparams.out_channels[2], depth=CONFIG.MODEL.TRANSFORMER.depth,
-        #                                 heads=CONFIG.MODEL.TRANSFORMER.heads, causal=False,
-        #                                 dim_head=CONFIG.MODEL.TRANSFORMER.dim_head, local_window_size=bottleneck_size)
-        # elif self.hparams.bottleneck_type == 'lstm':
-        #     self.bottleneck = nn.LSTM(input_size=self.hparams.out_channels[2], hidden_size=self.hparams.out_channels[2],
-        #                               num_layers=CONFIG.MODEL.TRANSFORMER.depth, batch_first=True)
+        if CONFIG.MODEL.bottleneck_type == 'performer':
+            # self.bottleneck = Performer(dim=CONFIG.MODEL.out_channels[2], depth=CONFIG.MODEL.TRANSFORMER.depth,
+            #                             heads=CONFIG.MODEL.TRANSFORMER.heads, causal=False,
+            #                             dim_head=CONFIG.MODEL.TRANSFORMER.dim_head, local_window_size=bottleneck_size)
+            pass
+        elif CONFIG.MODEL.bottleneck_type == 'lstm':
+            self.bottleneck = nn.LSTM(input_size=CONFIG.MODEL.out_channels[2], hidden_size=CONFIG.MODEL.out_channels[2],
+                                      num_layers=CONFIG.MODEL.TRANSFORMER.depth, batch_first=True)
 
         self.decoder = Decoder(in_len=self.encoder.out_len,
                                kernel_sizes=CONFIG.MODEL.kernel_sizes,
@@ -54,18 +55,18 @@ class TUNet(nn.Module):
 
     def forward(self, x):
         x1, x2, x3 = self.encoder(x)
-        # if CONFIG.MODEL.bottleneck_type is not None:
-        #     x3 = x3.permute([0, 2, 1])
-        #     if CONFIG.MODEL.bottleneck_type == 'performer':
-        #         bottle_neck = self.bottleneck(x3)
-        #     elif CONFIG.MODEL.bottleneck_type == 'lstm':
-        #         bottle_neck = self.bottleneck(x3)[0].clone()
-        #     else:
-        #         bottle_neck = self.bottleneck(inputs_embeds=x3)[0]
-        #     bottle_neck += x3
-        #     bottle_neck = bottle_neck.permute([0, 2, 1])
-        # else:
-        bottle_neck = x3
+        if CONFIG.MODEL.bottleneck_type is not None:
+            x3 = x3.permute([0, 2, 1])
+            if CONFIG.MODEL.bottleneck_type == 'performer':
+                bottle_neck = self.bottleneck(x3)
+            elif CONFIG.MODEL.bottleneck_type == 'lstm':
+                bottle_neck = self.bottleneck(x3)[0].clone()
+            else:
+                bottle_neck = self.bottleneck(inputs_embeds=x3)[0]
+            bottle_neck += x3
+            bottle_neck = bottle_neck.permute([0, 2, 1])
+        else:
+            bottle_neck = x3
         x_dec = self.decoder([x, x1, x2, bottle_neck])
         return x_dec
 
@@ -97,7 +98,7 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         print("x len: ", len(x))
-        x1 = F.leaky_relu(self.downconv(x[0]), 0.2)  # 2048
+        x1 = F.leaky_relu(self.downconv(x), 0.2)  # 2048
         # if self.tfilm:
         #     x1 = self.tfilm_d(x1)
         x2 = F.leaky_relu(self.downconv1(x1), 0.2)  # 1024
