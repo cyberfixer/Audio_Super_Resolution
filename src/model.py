@@ -91,10 +91,12 @@ class Encoder(nn.Module):
         self.out_len = max_len // (strides[0] * strides[1] * strides[2])
 
     def forward(self, x):
+
         print("x len: ", len(x))
         x1 = F.leaky_relu(self.downconv(x), 0.2)  # 2048
         if self.tfilm:
             x1 = self.tfilm_d(x1)
+            
         x2 = F.leaky_relu(self.downconv1(x1), 0.2)  # 1024
         if self.tfilm:
             x2 = self.tfilm_d1(x2)
