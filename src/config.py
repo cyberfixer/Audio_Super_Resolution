@@ -18,13 +18,13 @@ class CONFIG:
         val_split = 0.1
         batch_size = 16  # number of audio files per batch
         epochs = 150  # max training epochs
-        workers = 2  # number of dataloader workers
+        workers = 1  # number of dataloader workers
 
     class MODEL:
-        tfilm = False  # enable/disable TFiLM layers
+        tfilm = True  # enable/disable TFiLM layers
         n_blocks = 64  # number of blocks of TFiLM layers.
         # bottleneck module. Should either be 'performer', 'lstm' or None
-        bottleneck_type = 'performer'
+        bottleneck_type = 'lstm'
         assert bottleneck_type in ['performer',
                                    'lstm', None], "Invalid bottleneck_type"
         # kernel sizes of each convolution/deconvolution layers
