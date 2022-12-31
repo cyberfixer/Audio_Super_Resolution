@@ -3,6 +3,8 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from config import CONFIG
+from dataset import CustomDataset
+from torch.utils.data import DataLoader
 # TODO: rename the class of the model. if you change it remember to change the import in main.py
 
 
@@ -16,24 +18,24 @@ class SSAR(nn.Module):
         # TODO:need define forward
 
 
-class TUNet():
-    def __init__(self, train_dataset, val_dataset):
-        super(TUNet, self).__init__(train_dataset, val_dataset)
-        self.hparams['out_channels'] = CONFIG.MODEL.out_channels
-        self.hparams['kernel_sizes'] = CONFIG.MODEL.kernel_sizes
-        # None for now
-        self.hparams['bottleneck_type'] = CONFIG.MODEL.bottleneck_type
-        self.hparams['strides'] = CONFIG.MODEL.strides
-        self.hparams['tfilm'] = CONFIG.MODEL.tfilm  # false for now
-        self.hparams['n_blocks'] = CONFIG.MODEL.n_blocks
-        self.encoder = Encoder(max_len=self.hparams.max_len,
-                               kernel_sizes=self.hparams.kernel_sizes,
-                               strides=self.hparams.strides,
-                               out_channels=self.hparams.out_channels,
-                               tfilm=self.hparams.tfilm,
-                               n_blocks=self.hparams.n_blocks)
-        bottleneck_size = self.hparams.max_len // np.array(
-            self.hparams.strides).prod()
+class TUNet(nn.Module):
+    def __init__(self):
+        super(TUNet, self).__init__()
+        # self.hparams['out_channels'] = CONFIG.MODEL.out_channels
+        # self.hparams['kernel_sizes'] = CONFIG.MODEL.kernel_sizes
+        # # None for now
+        # self.hparams['bottleneck_type'] = CONFIG.MODEL.bottleneck_type
+        # self.hparams['strides'] = CONFIG.MODEL.strides
+        # self.hparams['tfilm'] = CONFIG.MODEL.tfilm  # false for now
+        # self.hparams['n_blocks'] = CONFIG.MODEL.n_blocks
+        self.encoder = Encoder(max_len=CONFIG.DATA.window_size,
+                               kernel_sizes=CONFIG.MODEL.kernel_sizes,
+                               strides=CONFIG.MODEL.strides,
+                               out_channels=CONFIG.MODEL.out_channels,
+                               tfilm=CONFIG.MODEL.tfilm,
+                               n_blocks=CONFIG.MODEL.n_blocks)
+        # bottleneck_size = self.hparams.max_len // np.array(
+        #     self.hparams.strides).prod()
 
         # if self.hparams.bottleneck_type == 'performer':
         #     self.bottleneck = Performer(dim=self.hparams.out_channels[2], depth=CONFIG.MODEL.TRANSFORMER.depth,
@@ -44,26 +46,26 @@ class TUNet():
         #                               num_layers=CONFIG.MODEL.TRANSFORMER.depth, batch_first=True)
 
         self.decoder = Decoder(in_len=self.encoder.out_len,
-                               kernel_sizes=self.hparams.kernel_sizes,
-                               strides=self.hparams.strides,
-                               out_channels=self.hparams.out_channels,
-                               tfilm=self.hparams.tfilm,
-                               n_blocks=self.hparams.n_blocks)
+                               kernel_sizes=CONFIG.MODEL.kernel_sizes,
+                               strides=CONFIG.MODEL.strides,
+                               out_channels=CONFIG.MODEL.out_channels,
+                               tfilm=CONFIG.MODEL.tfilm,
+                               n_blocks=CONFIG.MODEL.n_blocks)
 
     def forward(self, x):
         x1, x2, x3 = self.encoder(x)
-        if self.hparams.bottleneck_type is not None:
-            x3 = x3.permute([0, 2, 1])
-            if self.hparams.bottleneck_type == 'performer':
-                bottle_neck = self.bottleneck(x3)
-            elif self.hparams.bottleneck_type == 'lstm':
-                bottle_neck = self.bottleneck(x3)[0].clone()
-            else:
-                bottle_neck = self.bottleneck(inputs_embeds=x3)[0]
-            bottle_neck += x3
-            bottle_neck = bottle_neck.permute([0, 2, 1])
-        else:
-            bottle_neck = x3
+        # if CONFIG.MODEL.bottleneck_type is not None:
+        #     x3 = x3.permute([0, 2, 1])
+        #     if CONFIG.MODEL.bottleneck_type == 'performer':
+        #         bottle_neck = self.bottleneck(x3)
+        #     elif CONFIG.MODEL.bottleneck_type == 'lstm':
+        #         bottle_neck = self.bottleneck(x3)[0].clone()
+        #     else:
+        #         bottle_neck = self.bottleneck(inputs_embeds=x3)[0]
+        #     bottle_neck += x3
+        #     bottle_neck = bottle_neck.permute([0, 2, 1])
+        # else:
+        bottle_neck = x3
         x_dec = self.decoder([x, x1, x2, bottle_neck])
         return x_dec
 
@@ -94,7 +96,8 @@ class Encoder(nn.Module):
         self.out_len = max_len // (strides[0] * strides[1] * strides[2])
 
     def forward(self, x):
-        x1 = F.leaky_relu(self.downconv(x), 0.2)  # 2048
+        print("x len: ", len(x))
+        x1 = F.leaky_relu(self.downconv(x[0]), 0.2)  # 2048
         # if self.tfilm:
         #     x1 = self.tfilm_d(x1)
         x2 = F.leaky_relu(self.downconv1(x1), 0.2)  # 1024
@@ -133,7 +136,7 @@ class Decoder(nn.Module):
         x_dec = self.dropout(F.leaky_relu(self.convt3(bottle_neck), 0.2))
         # if self.tfilm:
         #     x_dec = self.tfilm_u1(x_dec)
-        # x_dec = x2 + x_dec
+        x_dec = x2 + x_dec
 
         x_dec = self.dropout(F.leaky_relu(self.convt2(x_dec), 0.2))
         # if self.tfilm:
@@ -143,50 +146,22 @@ class Decoder(nn.Module):
         return x_dec
 
 
+def main():
+    DATaset = CustomDataset()
+    data_loader = DataLoader(DATaset, shuffle=False,
+                             batch_size=16, collate_fn=CustomDataset.collate_fn)
+    model = TUNet()
+
+    model.train()
+
+    for batch, (X, y) in enumerate(data_loader):
+        print(f"shape X: {X.shape}")
+        # 1. Forward pass
+        y_pred = model(X)
+        print(f"shape y_pred: {y_pred.shape}")
+
+
+if __name__ == "__main__":
+    main()
+
 # class TFiLM(nn.Module):
-#     def __init__(self, block_size, input_dim, **kwargs):
-#         super(TFiLM, self).__init__(**kwargs)
-#         self.block_size = block_size
-#         self.max_pool = nn.MaxPool1d(kernel_size=self.block_size)
-#         self.lstm = nn.LSTM(
-#             input_size=input_dim, hidden_size=input_dim, num_layers=1, batch_first=True)
-
-#     def make_normalizer(self, x_in):
-#         """ Pools to downsample along 'temporal' dimension and then
-#             runs LSTM to generate normalization weights.
-#         """
-#         x_in_down = self.max_pool(x_in).permute([0, 2, 1])
-#         x_rnn, _ = self.lstm(x_in_down)
-#         return x_rnn.permute([0, 2, 1])
-
-#     def apply_normalizer(self, x_in, x_norm):
-#         """
-#         Applies normalization weights by multiplying them into their respective blocks.
-#         """
-#         # channel first
-#         n_blocks = x_in.shape[2] // self.block_size
-#         n_filters = x_in.shape[1]
-
-#         # reshape input into blocks
-#         x_norm = torch.reshape(x_norm, shape=(-1, n_filters, n_blocks, 1))
-#         x_in = torch.reshape(
-#             x_in, shape=(-1, n_filters, n_blocks, self.block_size))
-
-#         # multiply
-#         x_out = x_norm * x_in
-
-#         # return to original shape
-#         x_out = torch.reshape(
-#             x_out, shape=(-1, n_filters, n_blocks * self.block_size))
-
-#         return x_out
-
-#     def forward(self, x):
-#         assert len(x.shape) == 3, 'Input should be tensor with dimension \
-#                                    (batch_size, steps, num_features).'
-#         assert x.shape[2] % self.block_size == 0, 'Number of steps must be a \
-#                                                    multiple of the block size.'
-
-#         x_norm = self.make_normalizer(x)
-#         x = self.apply_normalizer(x, x_norm)
-#         return x

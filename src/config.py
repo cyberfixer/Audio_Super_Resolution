@@ -2,6 +2,7 @@
 # Any setting should be here
 import torch
 from torch import nn
+
 # This just outline for the config file from the TUNet repo.
 
 # TODO: at the end need to remove the sub classes that are not in use
@@ -15,6 +16,9 @@ class CONFIG:
     class TRAIN:
         lr = 0.01
         val_split = 0.1
+        batch_size = 16  # number of audio files per batch
+        epochs = 150  # max training epochs
+        workers = 2  # number of dataloader workers
 
     class MODEL:
         tfilm = False  # enable/disable TFiLM layers
