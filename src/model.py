@@ -98,7 +98,7 @@ class Encoder(nn.Module):
 
     def forward(self, x):
         print("x len: ", len(x))
-        x1 = F.leaky_relu(self.downconv(x[0]), 0.2)  # 2048
+        x1 = F.leaky_relu(self.downconv(x), 0.2)  # 2048
         # if self.tfilm:
         #     x1 = self.tfilm_d(x1)
         x2 = F.leaky_relu(self.downconv1(x1), 0.2)  # 1024
