@@ -13,7 +13,7 @@ import numpy as np
 
 # Temporarily function
 def get_power(x, nfft):
-    S = librosa.stft(x, nfft)
+    S = librosa.stft(x, n_fft = nfft)
     S = np.log(np.abs(S) ** 2 + 1e-8)
     return S
 
@@ -48,7 +48,6 @@ def trainStep(trainLoader):  # This is the starting point for training
     nTotalSteps = len(trainLoader)
     for epoch in range(epochs):
         for i, (lowSignal, targetSignal) in enumerate(tqdm(trainLoader, desc=f'Epoch {epoch+1}')):
-
             # Send to GPU
             lowSignal = lowSignal.to(device)
             targetSignal = targetSignal.to(device)
@@ -70,26 +69,25 @@ def testStep(testLoader):  # This is the starting point testing the model and ma
     # Set to test mode
     model.eval()
 
-    for lowSignal, targetSignal in testLoader[:5]: # ! We only take the first 5 for testing purposes, remove afterwards
+    for i, (lowSignal, targetSignal) in enumerate(tqdm(testLoader)): # ! We only take the first 5 for testing purposes, remove afterwards
         # Send to GPU
         lowSignal = lowSignal.to(device)
         targetSignal = targetSignal.to(device)
 
         predictedSignal = model(lowSignal)
 
-        lsd, lsd_high = LSD(targetSignal, predictedSignal)
-
-        print(f' LSD: {lsd}, LSD_HIGH: {lsd_high}') # must be replaced with something better
+        lsd, lsd_high = LSD(targetSignal.detach().cpu().numpy(), predictedSignal.detach().cpu().numpy())
+        tqdm.write(f' LSD: {np.average(lsd)}, LSD_HIGH: {np.average(lsd_high)}') # must be replaced with something better
 
 
 
 
 
 def main():
-    BATCH_SIZE = 32
+    BATCH_SIZE = 8
     train_data = CustomDataset()
     train_dataloader = DataLoader(train_data,  # dataset to turn into iterable
-                                  batch_size=1,  # how many samples per batch?
+                                  batch_size=BATCH_SIZE,  # how many samples per batch?
                                   shuffle=True,  # shuffle data every epoch?
                                   collate_fn=CustomDataset.collate_fn)
     print(
