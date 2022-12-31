@@ -2,6 +2,7 @@
 # Any setting should be here
 import torch
 from torch import nn
+
 # This just outline for the config file from the TUNet repo.
 
 # TODO: at the end need to remove the sub classes that are not in use
@@ -15,10 +16,33 @@ class CONFIG:
     class TRAIN:
         lr = 0.01
         val_split = 0.1
+        batch_size = 16  # number of audio files per batch
+        epochs = 150  # max training epochs
+        workers = 1  # number of dataloader workers
 
     class MODEL:
+        tfilm = True  # enable/disable TFiLM layers
+        n_blocks = 64  # number of blocks of TFiLM layers.
+        # bottleneck module. Should either be 'performer', 'lstm' or None
+        bottleneck_type = 'performer'
+        assert bottleneck_type in ['performer',
+                                   'lstm', None], "Invalid bottleneck_type"
+        # kernel sizes of each convolution/deconvolution layers
+        kernel_sizes = [66, 18, 8]
+        strides = [4, 4, 4]  # strides of each convolution/deconvolution layers
+        # numbers of filters of each convolution/deconvolution layers
+        out_channels = [64, 128, 256]
+
+        # Performer bottleneck config
         class TRANSFORMER:
-            pass
+            dim_head = 32
+            depth = 3
+            heads = 2
+
+        class TRANSFORMER:
+            dim_head = 32
+            depth = 3
+            heads = 2
 
     class DATA:
         dataset = 'vctk'  # dataset to use. Should either be 'vctk' or 'vivos'

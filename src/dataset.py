@@ -12,6 +12,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import Dataset
 
 from config import CONFIG
+from torch.utils.data import DataLoader
 
 
 def pad(sig, length):
@@ -100,14 +101,14 @@ class CustomDataset(Dataset):
 
         # stacks the windows virticlay X=(window_number, amplitude samples)
         # there was in this sliceing numpy.newaxis
-        X = frame(low_sig, self.window, self.stride)[:, :]
+        X = frame(low_sig, self.window, self.stride)[:, np.newaxis, :]
         # if self.mode == 'test':
         #     return X, target, low_sig # idk why you need that for testing
 
         # stacks the windows virticlay y=(window_number, amplitude samples)
         # there was in this sliceing numpy.newaxis
-        y = frame(target, self.window, self.stride)[:, :]
-        return torch.tensor(X), torch.tensor(y)
+        y = frame(target, self.window, self.stride)[:, np.newaxis, :]
+        return torch.tensor(X,requires_grad=True), torch.tensor(y)
 
 
 def main():  # ! this main is just for testing the CustomDataset class
@@ -118,7 +119,11 @@ def main():  # ! this main is just for testing the CustomDataset class
 
     print(f"shape of low_sig:{low_sig.shape}")
     print(f"shape of high_sig:{high_sig.shape}")
-
+    # data_loader = DataLoader(DATaset, shuffle=False,
+    #                          batch_size=16, collate_fn=CustomDataset.collate_fn)
+    # for batch, (X, Y) in enumerate(data_loader):
+    #     print(f"shape X: {X.shape}")
+    # print(d)
     # this loop append the windows to each other
     sig = torch.zeros(1)
     for i in low_sig:
