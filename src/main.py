@@ -6,12 +6,13 @@ from dataset import CustomDataset
 from dataset import CustomDataset
 
 
-def train():  # This is the starting point for training
+def trainStep():  # This is the starting point for training
     pass
 
 
-def test():  # This is the starting point testing the model and makeing the voice
+def testStep():  # This is the starting point testing the model and makeing the voice
     pass
+
 
 
 def main():
