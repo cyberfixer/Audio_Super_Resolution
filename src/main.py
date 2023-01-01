@@ -73,7 +73,7 @@ def testStep(model: torch.nn.Module,
     resultsLSD, resultsLSDHigh = np.empty(0), np.empty(0)
     # ! We only take the first 5 for testing purposes, remove afterwards
     with torch.inference_mode():
-        for batch, (lowSignal, targetSignal) in enumerate(testLoader, desc="batch", unit=" batchs"):
+        for batch, (lowSignal, targetSignal) in enumerate(testLoader):
             # Send to GPU
             lowSignal = lowSignal.to(device)
             targetSignal = targetSignal.to(device)
