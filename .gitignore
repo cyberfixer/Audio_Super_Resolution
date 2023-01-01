@@ -1,3 +1,4 @@
 *.flac
 *.pyc
 test.py
+*.bak

@@ -49,8 +49,8 @@ class CustomDataset(Dataset):
         name = CONFIG.DATA.dataset
         self.target_root = data_dir[name]['root']
         # path of the txt files
-        txt_list_low = data_dir[name]['train']
-        txt_list_target = data_dir[name]['trainlow']
+        txt_list_low = data_dir[name]['trainlow']
+        txt_list_target = data_dir[name]['train']
         # open the txt files
         self.data_list_low = self.load_txt(txt_list_low)
         self.data_list_target = self.load_txt(txt_list_target)
@@ -99,23 +99,26 @@ class CustomDataset(Dataset):
             # padding if the window is longer than the signal
             target_sig = pad(target_sig, self.window)
 
+        if len(target) != len(low_sig):
+            low_sig = pad(low_sig, len(target))
         # stacks the windows virticlay X=(window_number, amplitude samples)
         # there was in this sliceing numpy.newaxis
+
         X = frame(low_sig, self.window, self.stride)[:, np.newaxis, :]
         # if self.mode == 'test':
         #     return X, target, low_sig # idk why you need that for testing
 
         # stacks the windows virticlay y=(window_number, amplitude samples)
-        # there was in this sliceing numpy.newaxis
+        # there was in this sliceing numpy.newaxis #,
         y = frame(target, self.window, self.stride)[:, np.newaxis, :]
-        return torch.tensor(X,requires_grad=True), torch.tensor(y)
+        return torch.tensor(X, requires_grad=True), torch.tensor(y)
 
 
 def main():  # ! this main is just for testing the CustomDataset class
     DATaset = CustomDataset()
     print(f" there are {len(DATaset)} audio files")
     # change the index # it will call the __getitem__
-    low_sig, high_sig = DATaset[0]
+    low_sig, high_sig = DATaset[1]
 
     print(f"shape of low_sig:{low_sig.shape}")
     print(f"shape of high_sig:{high_sig.shape}")
@@ -125,12 +128,18 @@ def main():  # ! this main is just for testing the CustomDataset class
     #     print(f"shape X: {X.shape}")
     # print(d)
     # this loop append the windows to each other
-    sig = torch.zeros(1)
-    for i in low_sig:
-        sig = torch.cat((sig, i))
-    # print(sig.shape)
+    sigh = torch.zeros(1)
+    for i in high_sig[:, 0]:
+        sigh = torch.cat((sigh, i))
 
-    sf.write("low_sig.flac",  sig, samplerate=48000)
+    sigl = torch.zeros(1)
+    for i in low_sig[:, 0]:
+        sigl = torch.cat((sigl, i))
+    # print(sig.shape)
+    print(f"low shape: {sigl.shape}")
+    print(f"high shape: {sigh.shape}")
+    sf.write("high_sig.flac",  sigh.detach().numpy(), samplerate=48000)
+    sf.write("low_sig.flac",  sigl.detach().numpy(), samplerate=8000)
 
 
 if __name__ == '__main__':

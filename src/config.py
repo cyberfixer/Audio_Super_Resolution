@@ -14,12 +14,12 @@ class CONFIG:
         pass
 
     class TRAIN:
-        batch_size = 1
+        batch_size = 8
         lr = 0.0001
         val_split = 0.1
         batch_size = 16  # number of audio files per batch
         epochs = 150  # max training epochs
-        workers = 1  # number of dataloader workers
+        workers = 2  # number of dataloader workers
 
     class MODEL:
         tfilm = True  # enable/disable TFiLM layers

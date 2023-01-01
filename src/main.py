@@ -46,7 +46,7 @@ def trainStep(model: torch.nn.Module,
     model.train()
 
     # Training Loop
-    for batch, (lowSignal, targetSignal) in enumerate(trainLoader):
+    for batch, (lowSignal, targetSignal) in enumerate(tqdm(trainLoader, desc="batch", unit=" batchs")):
         # Send to GPU
         lowSignal = lowSignal.to(device)
         targetSignal = targetSignal.to(device)
@@ -59,8 +59,8 @@ def trainStep(model: torch.nn.Module,
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
-    print(color(f"Train Loss: {loss:.5f}", "blue"))
+        if batch % 200 == 0:
+            tqdm.write(color(f"Train Loss: {loss:.5f}", "blue"))
 
 
 def testStep(model: torch.nn.Module,
@@ -73,7 +73,7 @@ def testStep(model: torch.nn.Module,
     resultsLSD, resultsLSDHigh = np.empty(0), np.empty(0)
     # ! We only take the first 5 for testing purposes, remove afterwards
     with torch.inference_mode():
-        for batch, (lowSignal, targetSignal) in enumerate(testLoader):
+        for batch, (lowSignal, targetSignal) in enumerate(tqdm(testLoader, desc="batch", unit=" batchs")):
             # Send to GPU
             lowSignal = lowSignal.to(device)
             targetSignal = targetSignal.to(device)
@@ -89,11 +89,11 @@ def testStep(model: torch.nn.Module,
 
     results = [resultsLSD.mean(0), resultsLSD.std(
         0), resultsLSDHigh.mean(0), resultsLSDHigh.std(0)]
-    print(color(f"Test Loss: {loss:.5f}", "red"))
-    print(f"LSD Mean: {results[0]:.3f}")
-    print(f"LSD STD: {results[1]:.3f}")
-    print(f"LSD-HF Mean: {results[2]:.3f}")
-    print(f"LSD-HF STD: {results[3]:.3f}")
+    tqdm.write(color(f"Test Loss: {loss:.5f}", "red"))
+    tqdm.write(f"LSD Mean: {results[0]:.3f}")
+    tqdm.write(f"LSD STD: {results[1]:.3f}")
+    tqdm.write(f"LSD-HF Mean: {results[2]:.3f}")
+    tqdm.write(f"LSD-HF STD: {results[3]:.3f}")
 
 
 def main():
@@ -102,21 +102,21 @@ def main():
     BATCH_SIZE = 1
     learningRate = 0.0001
     optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
-    lossFunction = nn.CrossEntropyLoss()
+    lossFunction = nn.MSELoss()
 
     train_data = CustomDataset()
     train_dataloader = DataLoader(train_data,  # dataset to turn into iterable
                                   batch_size=BATCH_SIZE,  # how many samples per batch?
                                   shuffle=True,  # shuffle data every epoch?
-                                  collate_fn=CustomDataset.collate_fn)
+                                  collate_fn=CustomDataset.collate_fn,
+                                  )
 
     print(
         f"Length of train dataloader: {len(train_dataloader)} batches of {BATCH_SIZE}")
     # train_features_batch, train_labels_batch = next(iter(train_dataloader))
     # print(train_features_batch.shape, train_labels_batch.shape)
     epochs = 3
-    for epoch in tqdm(range(epochs)):
-        print(f" Epoch: {epoch}\n---------")
+    for epoch in tqdm(range(epochs), desc=f"Epoch", unit=" Epochs"):
         trainStep(model, train_dataloader, lossFunction, optimizer)
         # ! must use test_dataloader
         testStep(model, train_dataloader, lossFunction)
