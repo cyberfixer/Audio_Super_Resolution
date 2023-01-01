@@ -9,7 +9,7 @@ inputFilesPath = './data/vctk/48k'
 outputFilesPath = './data/vctk/8k'
 targetsr = 8000
 
-workers = 1
+workers = 4
 FoldersInProcess = []
 
 
@@ -30,7 +30,7 @@ def innerFolders(folders):
         lock.release()
 
         # All files in each folder
-        for filePath in tqdm(glob(folderPath + '/*'), desc=os.path.basename(folderPath), leave=None):
+        for filePath in tqdm(glob(folderPath + '/*'), desc=os.path.basename(folderPath), leave=False):
 
             # Path Calculculations
             fileName = os.path.basename(filePath)
