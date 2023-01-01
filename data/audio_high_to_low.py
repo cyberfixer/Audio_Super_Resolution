@@ -30,7 +30,8 @@ def innerFolders(folders):
         lock.release()
 
         # All files in each folder
-        for filePath in tqdm(glob(folderPath + '/*'), desc=os.path.basename(folderPath), leave=False):
+        g = glob(folderPath + '/*')
+        for filePath in tqdm(g, desc=os.path.basename(folderPath), leave=False):
 
             # Path Calculculations
             fileName = os.path.basename(filePath)
