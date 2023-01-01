@@ -9,7 +9,7 @@ inputFilesPath = './data/vctk/48k'
 outputFilesPath = './data/vctk/8k'
 targetsr = 8000
 
-workers = 4
+workers = 8
 FoldersInProcess = []
 
 
