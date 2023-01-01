@@ -53,7 +53,7 @@ def trainStep(model: torch.nn.Module,
 
         # Forward Pass
         predictedSignal = model(lowSignal)
-        loss = lossFunction(predictedSignal, targetSignal)
+        loss = lossFunction(predictedSignal, targetSignal) * 10000
 
         # Backward Pass
         optimizer.zero_grad()
@@ -73,13 +73,13 @@ def testStep(model: torch.nn.Module,
     resultsLSD, resultsLSDHigh = np.empty(0), np.empty(0)
     # ! We only take the first 5 for testing purposes, remove afterwards
     with torch.inference_mode():
-        for batch, (lowSignal, targetSignal) in enumerate(tqdm(testLoader, desc="batch", unit=" batchs")):
+        for batch, (lowSignal, targetSignal) in enumerate(testLoader, desc="batch", unit=" batchs"):
             # Send to GPU
             lowSignal = lowSignal.to(device)
             targetSignal = targetSignal.to(device)
 
             predictedSignal = model(lowSignal)
-            loss = lossFunction(predictedSignal, targetSignal)
+            loss = lossFunction(predictedSignal, targetSignal) * 10000
 
             lsd, LSDHigh = LSD(targetSignal.detach().cpu().numpy(),
                                predictedSignal.detach().cpu().numpy())
@@ -99,27 +99,33 @@ def testStep(model: torch.nn.Module,
 def main():
     model = TUNet().to(device)
     # heperparamters
-    BATCH_SIZE = 1
+    BATCH_SIZE = 2
     learningRate = 0.0001
     optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
     lossFunction = nn.MSELoss()
 
-    train_data = CustomDataset()
+    train_data = CustomDataset("train")
+    test_data = CustomDataset("test")
     train_dataloader = DataLoader(train_data,  # dataset to turn into iterable
                                   batch_size=BATCH_SIZE,  # how many samples per batch?
-                                  shuffle=True,  # shuffle data every epoch?
+                                  shuffle=False,  # shuffle data every epoch?
                                   collate_fn=CustomDataset.collate_fn,
                                   )
+    test_dataloader = DataLoader(test_data,  # dataset to turn into iterable
+                                 batch_size=BATCH_SIZE,  # how many samples per batch?
+                                 shuffle=False,  # shuffle data every epoch?
+                                 collate_fn=CustomDataset.collate_fn,
+                                 )
 
     print(
         f"Length of train dataloader: {len(train_dataloader)} batches of {BATCH_SIZE}")
     # train_features_batch, train_labels_batch = next(iter(train_dataloader))
     # print(train_features_batch.shape, train_labels_batch.shape)
-    epochs = 3
+    epochs = 100
     for epoch in tqdm(range(epochs), desc=f"Epoch", unit=" Epochs"):
         trainStep(model, train_dataloader, lossFunction, optimizer)
         # ! must use test_dataloader
-        testStep(model, train_dataloader, lossFunction)
+        testStep(model, test_dataloader, lossFunction)
 
 
 if __name__ == '__main__':

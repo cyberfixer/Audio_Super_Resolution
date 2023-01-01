@@ -14,7 +14,7 @@ class CONFIG:
         pass
 
     class TRAIN:
-        batch_size = 8
+        batch_size = 2
         lr = 0.0001
         val_split = 0.1
         batch_size = 16  # number of audio files per batch
