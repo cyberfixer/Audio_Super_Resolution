@@ -15,16 +15,16 @@ def main():
         # All files in each folder
         for filePath in tqdm(glob(folderPath + '\\*'), desc=os.path.basename(folderPath), leave=False):
 
-            # Does the file exist?
-            if os.path.exists(targetFilePath):
-                continue
 
             # Path Calculculations
             fileName = os.path.basename(filePath)
-            targetFolderPath = os.path.join(
-                outputFilesPath + os.path.basename(folderPath))
+            targetFolderPath = os.path.join(outputFilesPath + os.path.basename(folderPath))
             targetFilePath = os.path.join(targetFolderPath, fileName)
             targetFileExtension = os.path.splitext(fileName)[1][1:]
+
+            # Does the file exist?
+            if os.path.exists(targetFilePath):
+                continue
 
             # Create Folders if missing
             if os.path.isdir(outputFilesPath) is not True:
