@@ -1,16 +1,19 @@
 # this file is the starting point for the model to run everything
-from termcolor import colored as color
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+
 from config import CONFIG
 from model import SSAR, TUNet
 from dataset import CustomDataset
 from dataset import CustomDataset
-from tqdm import tqdm
+
 
 import librosa
 import numpy as np
+from termcolor import colored as color
+from tqdm import tqdm
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # Temporarily function
@@ -69,19 +72,20 @@ def testStep(model: torch.nn.Module,
     results = []
     resultsLSD, resultsLSDHigh = np.empty(0), np.empty(0)
     # ! We only take the first 5 for testing purposes, remove afterwards
-    for batch, (lowSignal, targetSignal) in enumerate(testLoader):
-        # Send to GPU
-        lowSignal = lowSignal.to(device)
-        targetSignal = targetSignal.to(device)
+    with torch.inference_mode():
+        for batch, (lowSignal, targetSignal) in enumerate(testLoader):
+            # Send to GPU
+            lowSignal = lowSignal.to(device)
+            targetSignal = targetSignal.to(device)
 
-        predictedSignal = model(lowSignal)
-        loss = lossFunction(predictedSignal, targetSignal)
+            predictedSignal = model(lowSignal)
+            loss = lossFunction(predictedSignal, targetSignal)
 
-        lsd, LSDHigh = LSD(targetSignal.detach().cpu().numpy(),
-                           predictedSignal.detach().cpu().numpy())
+            lsd, LSDHigh = LSD(targetSignal.detach().cpu().numpy(),
+                               predictedSignal.detach().cpu().numpy())
 
-        resultsLSD = np.append(resultsLSD, lsd)
-        resultsLSDHigh = np.append(resultsLSDHigh, LSDHigh)
+            resultsLSD = np.append(resultsLSD, lsd)
+            resultsLSDHigh = np.append(resultsLSDHigh, LSDHigh)
 
     results = [resultsLSD.mean(0), resultsLSD.std(
         0), resultsLSDHigh.mean(0), resultsLSDHigh.std(0)]
@@ -108,8 +112,8 @@ def main():
 
     print(
         f"Length of train dataloader: {len(train_dataloader)} batches of {BATCH_SIZE}")
-    train_features_batch, train_labels_batch = next(iter(train_dataloader))
-    print(train_features_batch.shape, train_labels_batch.shape)
+    # train_features_batch, train_labels_batch = next(iter(train_dataloader))
+    # print(train_features_batch.shape, train_labels_batch.shape)
     epochs = 3
     for epoch in tqdm(range(epochs)):
         print(f" Epoch: {epoch}\n---------")

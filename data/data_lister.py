@@ -10,7 +10,7 @@ def main():
     the inteded behavier is "folder/filename" 
     """
     with open('data/train.txt', 'w+') as f:
-        for (root, dirs, files) in tqdm(os.walk('./data/vctk', topdown=True)):
+        for (root, dirs, files) in tqdm(os.walk('./data/vctk/', topdown=True)):
             for fileName in files:
                 folderName = os.path.basename(root)
                 filePath = folderName + '/' + fileName

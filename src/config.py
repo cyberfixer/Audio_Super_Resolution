@@ -54,7 +54,7 @@ class CONFIG:
         '''
         data_dir = {'vctk': {'root': './data/vctk',
                              'train': "./data/train.txt",
-                             'trainlow': "./data/train.txt"
+                             'trainlow': "./data/trainlow.txt"
                              },
 
                     }

@@ -1,17 +1,19 @@
 import librosa
 import soundfile as sf
-from glob import glob # get full path of all files
-from tqdm import tqdm # progress bar
+from glob import glob  # get full path of all files
+from tqdm import tqdm  # progress bar
 import os
 
-inputFilesPath = '.\\vctk\\48k'
-outputFilesPath = '.\\vctk\\8k'
+inputFilesPath = '.\\data\\vctk\\48k'
+outputFilesPath = '.\\data\\vctk\\8k'
 targetsr = 8000
+
 
 def main():
     folders = glob(inputFilesPath + '\\*')
-    for folderPath in tqdm(folders, desc = 'Total'): # All folders
-        for filePath in tqdm(glob(folderPath + '\\*'),desc = os.path.basename(folderPath), leave = False): # All files in each folder
+    for folderPath in tqdm(folders, desc='Total'):  # All folders
+        # All files in each folder
+        for filePath in tqdm(glob(folderPath + '\\*'), desc=os.path.basename(folderPath), leave=False):
 
             # Does the file exist?
             if os.path.exists(targetFilePath):
@@ -19,7 +21,8 @@ def main():
 
             # Path Calculculations
             fileName = os.path.basename(filePath)
-            targetFolderPath =  os.path.join(outputFilesPath + os.path.basename(folderPath))
+            targetFolderPath = os.path.join(
+                outputFilesPath + os.path.basename(folderPath))
             targetFilePath = os.path.join(targetFolderPath, fileName)
             targetFileExtension = os.path.splitext(fileName)[1][1:]
 
@@ -31,10 +34,13 @@ def main():
 
             # Downsampling the audio
             signal, samplerate = librosa.load(filePath, sr=None)
-            signalLow = librosa.resample(signal,orig_sr=samplerate, target_sr=targetsr)
-            
+            signalLow = librosa.resample(
+                signal, orig_sr=samplerate, target_sr=targetsr)
+
             # Saving the audio file.
-            sf.write(targetFilePath ,data=signalLow, samplerate=targetsr, format=targetFileExtension)
+            sf.write(targetFilePath, data=signalLow,
+                     samplerate=targetsr, format=targetFileExtension)
+
 
 if __name__ == '__main__':
     main()
