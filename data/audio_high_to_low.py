@@ -29,6 +29,10 @@ def innerFolders(folders):
         FoldersInProcess.append(targetFolderPath)
         lock.release()
 
+        # Create Folders if missing
+        if os.path.isdir(targetFolderPath) is not True:
+            os.mkdir(targetFolderPath)
+
         # All files in each folder
         g = glob(folderPath + '/*')
         for filePath in tqdm(g, desc=os.path.basename(folderPath), leave=False):
@@ -41,12 +45,6 @@ def innerFolders(folders):
             # Does the file exist?
             if os.path.exists(targetFilePath):
                 continue
-
-            # Create Folders if missing
-            if os.path.isdir(outputFilesPath) is not True:
-                os.mkdir(outputFilesPath)
-            if os.path.isdir(targetFolderPath) is not True:
-                os.mkdir(targetFolderPath)
 
             # Downsampling the audio
             signal, samplerate = librosa.load(filePath, sr=None)
@@ -63,8 +61,12 @@ def innerFolders(folders):
         lock.release()
 
 def main():
-
+    # Browse all Input Folders
     folders = glob(inputFilesPath + '/*')
+
+    # Create Outputs folder if missing
+    if os.path.isdir(outputFilesPath) is not True:
+        os.mkdir(outputFilesPath)
 
     threads = [threading.Thread(target=innerFolders, args=[folders]) for i in range(workers)]
     for i in range(workers):
