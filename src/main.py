@@ -128,7 +128,7 @@ def main():
         f"Length of train dataloader: {len(train_dataloader)} batches of size:{BATCH_SIZE}")
     # train_features_batch, train_labels_batch = next(iter(train_dataloader))
     # print(train_features_batch.shape, train_labels_batch.shape)
-    epochs = 100
+    epochs = 1000
     for epoch in tqdm(range(epochs), desc=f"Epoch", unit=" Epochs"):
         trainStep(model, train_dataloader, lossFunction1,
                   lossFunction2, optimizer)
