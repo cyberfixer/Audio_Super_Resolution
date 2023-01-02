@@ -62,8 +62,10 @@ def trainStep(model: torch.nn.Module,
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if batch % 100 == 0:
-            tqdm.write(color(f"Train Loss: {loss:.5f}", "blue"))
+    tqdm.write(color(f"Train Loss: {loss:.5f}", "blue"))
+    with open("checkpoints\log.txt", "a") as f:
+        f.write(f"-Train Loss: {loss:.5f}\n")
+    return loss
 
 
 def testStep(model: torch.nn.Module,
@@ -100,6 +102,13 @@ def testStep(model: torch.nn.Module,
     tqdm.write(f"LSD-HF Mean: {results[2]:.3f}")
     tqdm.write(f"LSD-HF STD: {results[3]:.3f}")
 
+    with open("checkpoints\log.txt", "a") as f:
+        f.write(f"-Test Loss: {loss:.5f}\n")
+        f.write(f"LSD Mean: {results[0]:.3f}\n")
+        f.write(f"LSD STD: {results[1]:.3f}\n")
+        f.write(f"LSD-HF Mean: {results[2]:.3f}\n")
+        f.write(f"LSD-HF STD: {results[3]:.3f}\n")
+
 
 def main():
     model = TUNet().to(device)
@@ -130,10 +139,19 @@ def main():
     # print(train_features_batch.shape, train_labels_batch.shape)
     epochs = 1000
     for epoch in tqdm(range(epochs), desc=f"Epoch", unit=" Epochs"):
-        trainStep(model, train_dataloader, lossFunction1,
-                  lossFunction2, optimizer)
+        with open("checkpoints\log.txt", "a") as f:
+            f.write(f"----------------{epoch}----------------\n")
+        loss = trainStep(model, train_dataloader, lossFunction1,
+                         lossFunction2, optimizer)
         # ! must use test_dataloader
         testStep(model, test_dataloader, lossFunction1, lossFunction2)
+        PATH = f"checkpoints/Epoch{epoch}_loss{int(loss)}.pt"
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+        }, PATH)
 
 
 if __name__ == '__main__':
