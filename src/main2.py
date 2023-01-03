@@ -10,6 +10,7 @@ from model import TUNet
 from dataset import CustomDataset
 from loss import MRSTFTLossDDP
 from loss import loss
+import metrices as m
 
 # torch libaries
 import torch
@@ -53,6 +54,11 @@ def main():
         collate_fn=CustomDataset.collate_fn,
     )
 
+    # log variables
+    _trainLoss = []
+    _testLoss = []
+    _trainResulte = []
+    _testResulte = []
     epochs = 1000
     for epoch in tqdm(range(epochs), desc=f"Total", unit=" Epochs"):
 
@@ -66,20 +72,20 @@ def main():
             targetSignal = targetSignal.to(device)
 
             # Forward Pass
-            predictedSignal = model(lowSignal)
+            predSignal = model(lowSignal)
 
             # Calculate Loss
-            Trainloss = lossfn(predictedSignal, targetSignal)
+            trainLoss = lossfn(predSignal, targetSignal)
 
             # Calculate Metrics
-            # TODO: Calculate Metrics
+            trainResulte = m.compute_metrics(targetSignal, predSignal)
 
             # Backward Pass
             optimizer.zero_grad()
-            Trainloss.backward()
+            trainLoss.backward()
 
             # lr_scheduler contain the optimizer
-            lr_scheduler.step(Trainloss)
+            lr_scheduler.step(trainLoss)
 
         """Testing"""
         # Set to test mode
@@ -92,13 +98,13 @@ def main():
                 targetSignal = targetSignal.to(device)
 
                 # Forward Pass
-                predictedSignal = model(lowSignal)
+                predSignal = model(lowSignal)
 
                 # Calculate Loss
-                Testloss = lossfn(predictedSignal, targetSignal)
+                testLoss = lossfn(predSignal, targetSignal)
 
                 # Calculate Metrics
-                # TODO: Calculate Metrics
+                testResulte = m.compute_metrics(targetSignal, predSignal)
 
 
 if __name__ == "__main__":
