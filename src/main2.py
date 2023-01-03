@@ -1,4 +1,4 @@
-#
+# known libraries
 import librosa
 import numpy as np
 from termcolor import colored as color
@@ -8,11 +8,10 @@ from tqdm import tqdm
 from config import CONFIG
 from model import TUNet
 from dataset import CustomDataset
-from loss import MRSTFTLossDDP
 from loss import loss
 import metrices as m
 
-# torch libaries
+# torch libraries
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -56,8 +55,8 @@ def main():
 
     # log variables
     _trainLoss = []
-    _testLoss = []
     _trainResulte = []
+    _testLoss = []
     _testResulte = []
     epochs = 1000
     for epoch in tqdm(range(epochs), desc=f"Total", unit=" Epochs"):
@@ -87,6 +86,10 @@ def main():
             # lr_scheduler contain the optimizer
             lr_scheduler.step(trainLoss)
 
+            #
+            _trainLoss.append(trainLoss)
+            _trainResulte.append(trainResulte)
+
         """Testing"""
         # Set to test mode
         model.eval()
@@ -106,6 +109,10 @@ def main():
                 # Calculate Metrics
                 testResulte = m.compute_metrics(targetSignal, predSignal)
 
+                #
+                _testLoss.append(testLoss)
+                _testResulte.append(testResulte)
 
+        # TODO: save the model and its variables
 if __name__ == "__main__":
     main()
