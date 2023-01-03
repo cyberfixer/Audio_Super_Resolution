@@ -1,5 +1,6 @@
 # this file is the starting point for the model to run everything
 
+from loss import MRSTFTLossDDP
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -39,7 +40,8 @@ def LSD(x_hr, x_pr):  # Log Spectral Distance
 
 def trainStep(model: torch.nn.Module,
               trainLoader: torch.utils.data.DataLoader,
-              lossFunction: torch.nn.Module,
+              lossFunction1: torch.nn.Module,
+              lossFunction2: torch.nn.Module,
               optimizer: torch.optim.Optimizer,
               device: torch.device = device):  # This is the starting point for training
     # Set to train mode
@@ -53,19 +55,23 @@ def trainStep(model: torch.nn.Module,
 
         # Forward Pass
         predictedSignal = model(lowSignal)
-        loss = lossFunction(predictedSignal, targetSignal) * 10000
+        loss = lossFunction1(predictedSignal, targetSignal) + \
+            lossFunction2(predictedSignal, targetSignal) * 10000
 
         # Backward Pass
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if batch % 200 == 0:
-            tqdm.write(color(f"Train Loss: {loss:.5f}", "blue"))
+    tqdm.write(color(f"Train Loss: {loss:.5f}", "blue"))
+    with open("checkpoints\log.txt", "a") as f:
+        f.write(f"-Train Loss: {loss:.5f}\n")
+    return loss
 
 
 def testStep(model: torch.nn.Module,
              testLoader: torch.utils.data.DataLoader,
-             lossFunction: torch.nn.Module,
+             lossFunction1: torch.nn.Module,
+             lossFunction2: torch.nn.Module,
              device: torch.device = device):  # This is the starting point testing the model and makeing the voice
     # Set to test mode
     model.eval()
@@ -79,7 +85,8 @@ def testStep(model: torch.nn.Module,
             targetSignal = targetSignal.to(device)
 
             predictedSignal = model(lowSignal)
-            loss = lossFunction(predictedSignal, targetSignal) * 10000
+            loss = lossFunction1(predictedSignal, targetSignal) + \
+                lossFunction2(predictedSignal, targetSignal) * 10000
 
             lsd, LSDHigh = LSD(targetSignal.detach().cpu().numpy(),
                                predictedSignal.detach().cpu().numpy())
@@ -95,6 +102,13 @@ def testStep(model: torch.nn.Module,
     tqdm.write(f"LSD-HF Mean: {results[2]:.3f}")
     tqdm.write(f"LSD-HF STD: {results[3]:.3f}")
 
+    with open("checkpoints\log.txt", "a") as f:
+        f.write(f"-Test Loss: {loss:.5f}\n")
+        f.write(f"LSD Mean: {results[0]:.3f}\n")
+        f.write(f"LSD STD: {results[1]:.3f}\n")
+        f.write(f"LSD-HF Mean: {results[2]:.3f}\n")
+        f.write(f"LSD-HF STD: {results[3]:.3f}\n")
+
 
 def main():
     model = TUNet().to(device)
@@ -102,7 +116,9 @@ def main():
     BATCH_SIZE = 2
     learningRate = 0.0001
     optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
-    lossFunction = nn.MSELoss()
+    lossFunction1 = nn.MSELoss()
+    lossFunction2 = MRSTFTLossDDP(
+        n_bins=64, sample_rate=16000, device="cpu", scale='mel')
 
     train_data = CustomDataset("train")
     test_data = CustomDataset("test")
@@ -118,14 +134,24 @@ def main():
                                  )
 
     print(
-        f"Length of train dataloader: {len(train_dataloader)} batches of {BATCH_SIZE}")
+        f"Length of train dataloader: {len(train_dataloader)} batches of size:{BATCH_SIZE}")
     # train_features_batch, train_labels_batch = next(iter(train_dataloader))
     # print(train_features_batch.shape, train_labels_batch.shape)
-    epochs = 100
+    epochs = 1000
     for epoch in tqdm(range(epochs), desc=f"Epoch", unit=" Epochs"):
-        trainStep(model, train_dataloader, lossFunction, optimizer)
+        with open("checkpoints\log.txt", "a") as f:
+            f.write(f"----------------{epoch}----------------\n")
+        loss = trainStep(model, train_dataloader, lossFunction1,
+                         lossFunction2, optimizer)
         # ! must use test_dataloader
-        testStep(model, test_dataloader, lossFunction)
+        testStep(model, test_dataloader, lossFunction1, lossFunction2)
+        PATH = f"checkpoints/Epoch{epoch}_loss{int(loss)}.pt"
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+        }, PATH)
 
 
 if __name__ == '__main__':
