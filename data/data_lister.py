@@ -5,9 +5,9 @@ import os
 from tqdm import tqdm
 
 
-def listerTrain():
+def listerTrainTarget(samplingRateFolderName):
     with open('data/train.txt', 'w+') as f:
-        for (root, dirs, files) in tqdm(os.walk('./data/vctk/48k', topdown=True)):
+        for (root, dirs, files) in tqdm(os.walk('./data/vctk/'+samplingRateFolderName, topdown=True)):
             for fileName in files:
                 parentFolderName = os.path.basename(os.path.split(root)[0])
                 folderName = os.path.basename(root)
@@ -30,10 +30,10 @@ def listerTrainlow(samplingRateFolderName):
 
 
 def main():
-
-    samplingRateFolderName = "8k"
-    listerTrain()
-    listerTrainlow(samplingRateFolderName)
+    samplingRateFolderNameTarget = "16k"
+    samplingRateFolderNameLow = "8k"
+    listerTrainTarget(samplingRateFolderNameTarget)
+    listerTrainlow(samplingRateFolderNameLow)
 
 
 if __name__ == "__main__":
