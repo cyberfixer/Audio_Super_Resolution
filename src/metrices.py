@@ -3,7 +3,7 @@ import numpy as np
 
 
 def get_power(x, nfft):
-    S = librosa.stft(x, nfft)
+    S = librosa.stft(x, n_fft=nfft)
     S = np.log(np.abs(S) ** 2 + 1e-8)
     return S
 

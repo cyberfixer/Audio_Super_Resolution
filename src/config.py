@@ -22,6 +22,7 @@ class CONFIG:
         workers = 1  # number of dataloader workers
         patience = 3  # learning rate scheduler's patience
         factor = 0.5  # learning rate reduction factor
+        mse_weight = 10000  # weight of the MSE loss
 
     class MODEL:
         tfilm = True  # enable/disable TFiLM layers

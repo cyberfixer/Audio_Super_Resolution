@@ -82,7 +82,7 @@ class MRSTFTLossDDP(MultiResolutionSTFTLoss):
             ]
 
 
-class loss:
+class addedLoss:
     def __init__(self):
         self.time_loss = nn.MSELoss()
         self.freq_loss = MRSTFTLossDDP(

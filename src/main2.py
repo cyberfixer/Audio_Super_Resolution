@@ -8,7 +8,7 @@ from tqdm import tqdm
 from config import CONFIG
 from model import TUNet
 from dataset import CustomDataset
-from loss import loss
+from loss import addedLoss as loss
 import metrices as m
 
 # torch libraries
@@ -74,21 +74,22 @@ def main():
             predSignal = model(lowSignal)
 
             # Calculate Loss
-            trainLoss = lossfn(predSignal, targetSignal)
+            trainLoss = lossfn.loss(predSignal, targetSignal)
 
             # Calculate Metrics
-            trainResulte = m.compute_metrics(targetSignal, predSignal)
+            trainResulte = m.compute_metrics(
+                targetSignal.detach().cpu().numpy(), predSignal.detach().cpu().numpy())
 
             # Backward Pass
             optimizer.zero_grad()
             trainLoss.backward()
 
-            # lr_scheduler contain the optimizer
-            lr_scheduler.step(trainLoss)
+        # lr_scheduler contain the optimizer
+        lr_scheduler.step(trainLoss)
 
-            #
-            _trainLoss.append(trainLoss)
-            _trainResulte.append(trainResulte)
+        #
+        _trainLoss.append(trainLoss)
+        _trainResulte.append(trainResulte)
 
         """Testing"""
         # Set to test mode
@@ -104,14 +105,15 @@ def main():
                 predSignal = model(lowSignal)
 
                 # Calculate Loss
-                testLoss = lossfn(predSignal, targetSignal)
+                testLoss = lossfn.loss(predSignal, targetSignal)
 
                 # Calculate Metrics
-                testResulte = m.compute_metrics(targetSignal, predSignal)
+                testResulte = m.compute_metrics(
+                    targetSignal.detach().cpu().numpy(), predSignal.detach().cpu().numpy())
 
-                #
-                _testLoss.append(testLoss)
-                _testResulte.append(testResulte)
+            #
+            _testLoss.append(testLoss)
+            _testResulte.append(testResulte)
 
         # TODO: save the model and its variables
 if __name__ == "__main__":
