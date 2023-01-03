@@ -138,7 +138,7 @@ def main():
     # train_features_batch, train_labels_batch = next(iter(train_dataloader))
     # print(train_features_batch.shape, train_labels_batch.shape)
     epochs = 1000
-    for epoch in tqdm(range(epochs), desc=f"Epoch", unit=" Epochs"):
+    for epoch in tqdm(range(epochs), desc=f"Total", unit=" Epochs"):
         with open("checkpoints\log.txt", "a") as f:
             f.write(f"----------------{epoch}----------------\n")
         loss = trainStep(model, train_dataloader, lossFunction1,
