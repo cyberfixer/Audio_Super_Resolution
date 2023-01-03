@@ -49,7 +49,7 @@ def main():
     testDataloader = DataLoader(
         test_data,  # dataset to turn into iterable
         batch_size=BATCH_SIZE,  # how many samples per batch?
-        shuffle=False,  # shuffle data every epoch?
+        shuffle=True,  # shuffle data every epoch?
         collate_fn=CustomDataset.collate_fn,
     )
 
@@ -59,7 +59,7 @@ def main():
     _testLoss = []
     _testResulte = []
     epochs = 1000
-    for epoch in tqdm(range(epochs), desc=f"Total", unit=" Epochs"):
+    for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
 
         """Training"""
         # Set to train mode
@@ -84,7 +84,7 @@ def main():
             optimizer.zero_grad()
             trainLoss.backward()
 
-            # TODO: running testloss & testResulte
+            # TODO: running trainloss & trianResulte
             #
             _trainLoss.append(trainLoss)
             _trainResulte.append(trainResulte)
@@ -117,7 +117,10 @@ def main():
                 _testLoss.append(testLoss)
                 _testResulte.append(testResulte)
 
-
         # TODO: save the model and its variables
+        if epoch % 100:
+            pass
+
+
 if __name__ == "__main__":
     main()
