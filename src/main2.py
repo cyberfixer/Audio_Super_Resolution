@@ -84,12 +84,13 @@ def main():
             optimizer.zero_grad()
             trainLoss.backward()
 
-        # lr_scheduler contain the optimizer
-        lr_scheduler.step(trainLoss)
+            # TODO: running testloss & testResulte
+            #
+            _trainLoss.append(trainLoss)
+            _trainResulte.append(trainResulte)
 
-        #
-        _trainLoss.append(trainLoss)
-        _trainResulte.append(trainResulte)
+        # lr_scheduler contain the optimizer called every epoch
+        lr_scheduler.step(trainLoss)
 
         """Testing"""
         # Set to test mode
@@ -111,9 +112,11 @@ def main():
                 testResulte = m.compute_metrics(
                     targetSignal.detach().cpu().numpy(), predSignal.detach().cpu().numpy())
 
-            #
-            _testLoss.append(testLoss)
-            _testResulte.append(testResulte)
+                # TODO: running testloss & testResulte
+                #
+                _testLoss.append(testLoss)
+                _testResulte.append(testResulte)
+
 
         # TODO: save the model and its variables
 if __name__ == "__main__":
