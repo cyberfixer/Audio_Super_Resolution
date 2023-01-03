@@ -34,4 +34,4 @@ def SI_SDR(target, preds):
 def compute_metrics(x_hr, pred_audio):
     lsd, lsd_high = LSD(x_hr, pred_audio)
     sisdr = SI_SDR(x_hr, pred_audio)
-    return np.array([lsd, lsd_high, sisdr])
+    return np.array([lsd, lsd_high, sisdr], dtype=object)
