@@ -1,8 +1,12 @@
 # known libraries
+from loss import MRSTFTLossDDP
+from timeit import default_timer as timer
 import librosa
 import numpy as np
 from termcolor import colored as color
-from tqdm import tqdm
+from tqdm.auto import tqdm
+import matplotlib.pyplot as plt
+
 
 # classes inside the project
 from config import CONFIG
@@ -17,13 +21,13 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-# device agnastic code
-device = "cuda" if torch.cuda.is_available() else "cpu"
-# creating the model and sending it to the device
-model = TUNet().to(device)
-
 
 def main():
+    # device agnastic code
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # creating the model and sending it to the device
+    model = TUNet().to(device)
+
     # hyperParameters
     BATCH_SIZE = 2
     LR = 0.0001
@@ -54,11 +58,10 @@ def main():
     )
 
     # log variables
-    _trainLoss = []
-    _trainResulte = []
-    _testLoss = []
-    _testResulte = []
-    epochs = 1000
+    _trainLoss = np.empty(0)
+    _testLoss = np.empty(0)
+    _testResulte = np.empty((6, 0))
+    epochs = 10
     for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
 
         """Training"""
@@ -76,18 +79,22 @@ def main():
             # Calculate Loss
             trainLoss = lossfn.loss(predSignal, targetSignal)
 
-            # Calculate Metrics
-            trainResulte = m.compute_metrics(
-                targetSignal.detach().cpu().numpy(), predSignal.detach().cpu().numpy())
+            # Zero the gradients
+            optimizer.zero_grad()
 
             # Backward Pass
-            optimizer.zero_grad()
             trainLoss.backward()
 
-            # TODO: running trainloss & trianResulte
-            #
-            _trainLoss.append(trainLoss)
-            _trainResulte.append(trainResulte)
+            # Update the model's parameters
+            optimizer.step()
+
+        # Train loss for the epoch
+        tqdm.write(color(f"Train Loss: {trainLoss:.5f}", "blue"))
+
+        # _trainLoss will contain list of the trainLoss for every epoch
+        _trainLoss = np.append(_trainLoss, trainLoss.detach().cpu())
+        # tqdm.write(f"shape of _trainLoss: {_trainLoss.shape}")
+        # tqdm.write(f"_trainLoss: {_trainLoss})")
 
         # lr_scheduler contain the optimizer called every epoch
         lr_scheduler.step(trainLoss)
@@ -96,7 +103,9 @@ def main():
         # Set to test mode
         model.eval()
         with torch.inference_mode():
-
+            lsdBatch = np.empty(0)
+            lsd_highBatch = np.empty(0)
+            sisdrBatch = np.empty(0)
             for batch, (lowSignal, targetSignal) in enumerate(testDataloader):
                 # Send to GPU
                 lowSignal = lowSignal.to(device)
@@ -109,17 +118,32 @@ def main():
                 testLoss = lossfn.loss(predSignal, targetSignal)
 
                 # Calculate Metrics
-                testResulte = m.compute_metrics(
+                lsd, lsd_high, sisdr = m.compute_metrics(
                     targetSignal.detach().cpu().numpy(), predSignal.detach().cpu().numpy())
 
-                # TODO: running testloss & testResulte
                 #
-                _testLoss.append(testLoss)
-                _testResulte.append(testResulte)
+                lsdBatch = np.append(lsdBatch, lsd)
+                lsd_highBatch = np.append(lsd_highBatch, lsd_high)
+                sisdrBatch = np.append(sisdrBatch, sisdr)
+
+            batchResulte = np.vstack(
+                [lsdBatch.mean(0), lsdBatch.std(0),
+                 lsd_highBatch.mean(0), lsd_highBatch.std(0), sisdrBatch.mean(0), sisdrBatch.std(0)])
+            _testResulte = np.concatenate((_testResulte, batchResulte), axis=1)
+            tqdm.write(f"_testResulte.shape:{_testResulte.shape}")
+            tqdm.write(f"_testResulte:{_testResulte}")
+
+            # test Loss for every epoch
+            tqdm.write(color(f"Test Loss: {testLoss:.5f}", "red"))
+            _testLoss = np.append(_testLoss, testLoss.detach().cpu())
 
         # TODO: save the model and its variables
         if epoch % 100:
             pass
+
+    fig, ax = plt.subplots()
+    ax.plot(list(range(1, epoch+1)), _testResulte[0])
+    plt.show()
 
 
 if __name__ == "__main__":

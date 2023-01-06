@@ -90,6 +90,7 @@ class addedLoss:
         )
 
     def loss(self, low, high):
-        loss = self.freq_loss(low, high) + self.time_loss(low,
-                                                          high) * CONFIG.TRAIN.mse_weight
+        # there are parentheses here to force the addtion berfor the mulitplication
+        loss = (self.freq_loss(low, high) +
+                self.time_loss(low, high)) * CONFIG.TRAIN.mse_weight
         return loss
