@@ -1,9 +1,11 @@
 import torch
 from auraloss.freq import STFTLoss, MultiResolutionSTFTLoss, apply_reduction
 
+from torch import nn
+from config import CONFIG
+
 
 class STFTLossDDP(STFTLoss):
-
     def forward(self, x, y):
         # compute the magnitude and phase spectra of input and target
         self.window = self.window.to(x.device)
@@ -17,8 +19,7 @@ class STFTLossDDP(STFTLoss):
 
         # normalize scales
         if self.scale_invariance:
-            alpha = (x_mag * y_mag).sum([-2, -1]) / \
-                ((y_mag ** 2).sum([-2, -1]))
+            alpha = (x_mag * y_mag).sum([-2, -1]) / ((y_mag**2).sum([-2, -1]))
             y_mag = y_mag * alpha.unsqueeze(-1)
 
         # compute loss terms
@@ -27,8 +28,11 @@ class STFTLossDDP(STFTLoss):
         lin_loss = self.linstft(x_mag, y_mag) if self.w_lin_mag else 0.0
 
         # combine loss terms
-        loss = (self.w_sc * sc_loss) + (self.w_log_mag *
-                                        mag_loss) + (self.w_lin_mag * lin_loss)
+        loss = (
+            (self.w_sc * sc_loss)
+            + (self.w_log_mag * mag_loss)
+            + (self.w_lin_mag * lin_loss)
+        )
         loss = apply_reduction(loss, reduction=self.reduction)
 
         if self.output == "loss":
@@ -38,35 +42,55 @@ class STFTLossDDP(STFTLoss):
 
 
 class MRSTFTLossDDP(MultiResolutionSTFTLoss):
-    def __init__(self,
-                 fft_sizes=[1024, 2048, 512],
-                 hop_sizes=[120, 240, 50],
-                 win_lengths=[600, 1200, 240],
-                 window="hann_window",
-                 w_sc=1.0,
-                 w_log_mag=1.0,
-                 w_lin_mag=0.0,
-                 w_phs=0.0,
-                 sample_rate=None,
-                 scale=None,
-                 n_bins=None,
-                 scale_invariance=False,
-                 **kwargs):
+    def __init__(
+        self,
+        fft_sizes=[1024, 2048, 512],
+        hop_sizes=[120, 240, 50],
+        win_lengths=[600, 1200, 240],
+        window="hann_window",
+        w_sc=1.0,
+        w_log_mag=1.0,
+        w_lin_mag=0.0,
+        w_phs=0.0,
+        sample_rate=None,
+        scale=None,
+        n_bins=None,
+        scale_invariance=False,
+        **kwargs
+    ):
         super(MultiResolutionSTFTLoss, self).__init__()
         assert len(fft_sizes) == len(hop_sizes) == len(
             win_lengths)  # must define all
         self.stft_losses = torch.nn.ModuleList()
         for fs, ss, wl in zip(fft_sizes, hop_sizes, win_lengths):
-            self.stft_losses += [STFTLossDDP(fs,
-                                             ss,
-                                             wl,
-                                             window,
-                                             w_sc,
-                                             w_log_mag,
-                                             w_lin_mag,
-                                             w_phs,
-                                             sample_rate,
-                                             scale,
-                                             n_bins,
-                                             scale_invariance,
-                                             **kwargs)]
+            self.stft_losses += [
+                STFTLossDDP(
+                    fs,
+                    ss,
+                    wl,
+                    window,
+                    w_sc,
+                    w_log_mag,
+                    w_lin_mag,
+                    w_phs,
+                    sample_rate,
+                    scale,
+                    n_bins,
+                    scale_invariance,
+                    **kwargs
+                )
+            ]
+
+
+class addedLoss:
+    def __init__(self):
+        self.time_loss = nn.MSELoss()
+        self.freq_loss = MRSTFTLossDDP(
+            n_bins=64, sample_rate=CONFIG.DATA.sr, device="cpu", scale="mel"
+        )
+
+    def loss(self, low, high):
+        # there are parentheses here to force the addtion berfor the mulitplication
+        loss = (self.freq_loss(low, high) +
+                self.time_loss(low, high)) * CONFIG.TRAIN.mse_weight
+        return loss

@@ -17,9 +17,12 @@ class CONFIG:
         batch_size = 2
         lr = 0.0001
         val_split = 0.1
-        batch_size = 16  # number of audio files per batch
+        batch_size = 2  # number of audio files per batch
         epochs = 150  # max training epochs
-        workers = 2  # number of dataloader workers
+        workers = 1  # number of dataloader workers
+        patience = 3  # learning rate scheduler's patience
+        factor = 0.5  # learning rate reduction factor
+        mse_weight = 10000  # weight of the MSE loss
 
     class MODEL:
         tfilm = True  # enable/disable TFiLM layers
@@ -35,11 +38,6 @@ class CONFIG:
         out_channels = [64, 128, 256]
 
         # Performer bottleneck config
-        class TRANSFORMER:
-            dim_head = 32
-            depth = 3
-            heads = 2
-
         class TRANSFORMER:
             dim_head = 32
             depth = 3
@@ -61,6 +59,7 @@ class CONFIG:
         window_size = 8192  # size of the sliding window
         # stride of the sliding window. Should be divisible to 'mask_chunk' if the task is MSM.
         stride = 4096
+        sr = 16000  # target audio sampling rate
 
     class LOG:
         pass
