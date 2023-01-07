@@ -81,7 +81,7 @@ def main():
     else:
         """this part will contain torch.load and will load all the variables needed"""
         pass
-    epochs = 250
+    epochs = 2500
     for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
 
         """Training"""
@@ -168,9 +168,12 @@ def main():
             f.write(f"----------------{epoch}----------------\n")
             f.write(f"Train Loss: {trainLoss:.5f}\n")
             f.write(f"Test Loss: {testLoss:.5f}\n")
-            f.write(f"LSD: {batchResulte[0]}\n")
-            f.write(f"LSD-High: {batchResulte[2]}\n")
-            f.write(f"SI-SDR: {batchResulte[4]}\n")
+            f.write(f"LSD Mean: {batchResulte[0]}\n")
+            f.write(f"LSD STD: {batchResulte[1]}\n")
+            f.write(f"LSD-High Mean: {batchResulte[2]}\n")
+            f.write(f"LSD-High STD: {batchResulte[3]}\n")
+            f.write(f"SI-SDR Mean: {batchResulte[4]}\n")
+            f.write(f"SI-SDR STD: {batchResulte[5]}\n")
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
