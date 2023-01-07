@@ -1,10 +1,12 @@
 # known libraries
 from timeit import default_timer as timer
 import librosa
+import os
 import numpy as np
 from termcolor import colored as color
 from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 
 # classes inside the project
@@ -22,6 +24,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 def main():
+    #
+
     # device agnastic code
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # creating the model and sending it to the device
@@ -61,6 +65,22 @@ def main():
     _trainLoss = np.empty(0)
     _testLoss = np.empty(0)
     _testResulte = np.empty((6, 0))
+
+    # this variable will determen that is new train or will load a model
+    newTrain = True
+    if newTrain == True:
+        now = datetime.now()  # current date and time
+        # folder name for the checkpoints
+        # strftime convert time to string
+        folder = now.strftime("%m-%d %p %I-%M-%S")
+        print(folder)
+        try:
+            os.makedirs(f"checkpoints/{folder}")
+        except FileExistsError:
+            pass
+    else:
+        """this part will contain torch.load and will load all the variables needed"""
+        pass
     epochs = 5
     for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
 
@@ -139,27 +159,28 @@ def main():
             tqdm.write(color(f"Test Loss: {testLoss:.5f}", "red"))
             _testLoss = np.append(_testLoss, testLoss.detach().cpu())
 
-        # # TODO: save the model and its variables
-        # if epoch % 100:
-        #     PATH = f"checkpoints/Epoch{epoch}_loss{int(loss)}.pt"
-        # torch.save({
-        #     'epoch': epoch,
-        #     'model_state_dict': model.state_dict(),
-        #     'optimizer_state_dict': optimizer.state_dict(),
-        #     'loss': loss,
-        # }, PATH)
-    epochlist = list(range(1, epoch+2))
-    fig, ax = plt.subplots(nrows=1, ncols=3)
-    ax[0].plot(epochlist, _testResulte[0])
-    ax[0].set_xlabel("Epochs")
-    ax[0].set_title("LSD")
-    ax[1].plot(epochlist, _testResulte[2])
-    ax[1].set_xlabel("Epochs")
-    ax[1].set_title("LSD_High")
-    ax[2].plot(epochlist, _testResulte[4])
-    ax[2].set_xlabel("Epochs")
-    ax[2].set_title("SI_SDR")
-    plt.show()
+        # TODO: save the model and its variables
+        PATH = f"./checkpoints/{folder}/Epoch{epoch}_loss{int(_testLoss[-1])}.pt"
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            '_trainloss': _trainLoss,
+            '_testloss': _testLoss,
+            '_testResulte': _testResulte
+        }, PATH)
+    # epochlist = list(range(1, epoch+2))
+    # fig, ax = plt.subplots(nrows=1, ncols=3)
+    # ax[0].plot(epochlist, _testResulte[0])
+    # ax[0].set_xlabel("Epochs")
+    # ax[0].set_title("LSD")
+    # ax[1].plot(epochlist, _testResulte[2])
+    # ax[1].set_xlabel("Epochs")
+    # ax[1].set_title("LSD_High")
+    # ax[2].plot(epochlist, _testResulte[4])
+    # ax[2].set_xlabel("Epochs")
+    # ax[2].set_title("SI_SDR")
+    # plt.show()
 
 
 if __name__ == "__main__":
