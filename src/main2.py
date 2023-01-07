@@ -57,7 +57,7 @@ def main():
     )
 
     # log variables
-    # ! these list has to be saved & loaded with the model weights
+    # ! these lists has to be saved & loaded with the model weights
     _trainLoss = np.empty(0)
     _testLoss = np.empty(0)
     _testResulte = np.empty((6, 0))
