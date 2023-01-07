@@ -1,5 +1,4 @@
 # known libraries
-from loss import MRSTFTLossDDP
 from timeit import default_timer as timer
 import librosa
 import numpy as np
@@ -58,10 +57,11 @@ def main():
     )
 
     # log variables
+    # ! these list has to be saved & loaded with the model weights
     _trainLoss = np.empty(0)
     _testLoss = np.empty(0)
     _testResulte = np.empty((6, 0))
-    epochs = 10
+    epochs = 5
     for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
 
         """Training"""
@@ -121,14 +121,16 @@ def main():
                 lsd, lsd_high, sisdr = m.compute_metrics(
                     targetSignal.detach().cpu().numpy(), predSignal.detach().cpu().numpy())
 
-                #
+                # Collacting the metrics for the whole batch
                 lsdBatch = np.append(lsdBatch, lsd)
                 lsd_highBatch = np.append(lsd_highBatch, lsd_high)
                 sisdrBatch = np.append(sisdrBatch, sisdr)
 
+            # make the list verticlly
             batchResulte = np.vstack(
                 [lsdBatch.mean(0), lsdBatch.std(0),
                  lsd_highBatch.mean(0), lsd_highBatch.std(0), sisdrBatch.mean(0), sisdrBatch.std(0)])
+            #
             _testResulte = np.concatenate((_testResulte, batchResulte), axis=1)
             tqdm.write(f"_testResulte.shape:{_testResulte.shape}")
             tqdm.write(f"_testResulte:{_testResulte}")
@@ -137,12 +139,26 @@ def main():
             tqdm.write(color(f"Test Loss: {testLoss:.5f}", "red"))
             _testLoss = np.append(_testLoss, testLoss.detach().cpu())
 
-        # TODO: save the model and its variables
-        if epoch % 100:
-            pass
-
-    fig, ax = plt.subplots()
-    ax.plot(list(range(1, epoch+1)), _testResulte[0])
+        # # TODO: save the model and its variables
+        # if epoch % 100:
+        #     PATH = f"checkpoints/Epoch{epoch}_loss{int(loss)}.pt"
+        # torch.save({
+        #     'epoch': epoch,
+        #     'model_state_dict': model.state_dict(),
+        #     'optimizer_state_dict': optimizer.state_dict(),
+        #     'loss': loss,
+        # }, PATH)
+    epochlist = list(range(1, epoch+2))
+    fig, ax = plt.subplots(nrows=1, ncols=3)
+    ax[0].plot(epochlist, _testResulte[0])
+    ax[0].set_xlabel("Epochs")
+    ax[0].set_title("LSD")
+    ax[1].plot(epochlist, _testResulte[2])
+    ax[1].set_xlabel("Epochs")
+    ax[1].set_title("LSD_High")
+    ax[2].plot(epochlist, _testResulte[4])
+    ax[2].set_xlabel("Epochs")
+    ax[2].set_title("SI_SDR")
     plt.show()
 
 
