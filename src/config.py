@@ -43,11 +43,6 @@ class CONFIG:
             depth = 3
             heads = 2
 
-        class TRANSFORMER:
-            dim_head = 32
-            depth = 3
-            heads = 2
-
     class DATA:
         dataset = 'vctk'  # dataset to use. Should either be 'vctk' or 'vivos'
         '''

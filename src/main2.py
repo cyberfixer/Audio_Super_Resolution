@@ -81,7 +81,7 @@ def main():
     else:
         """this part will contain torch.load and will load all the variables needed"""
         pass
-    epochs = 5
+    epochs = 250
     for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
 
         """Training"""
@@ -152,11 +152,14 @@ def main():
                  lsd_highBatch.mean(0), lsd_highBatch.std(0), sisdrBatch.mean(0), sisdrBatch.std(0)])
             #
             _testResulte = np.concatenate((_testResulte, batchResulte), axis=1)
-            tqdm.write(f"_testResulte.shape:{_testResulte.shape}")
-            tqdm.write(f"_testResulte:{_testResulte}")
+            # tqdm.write(f"_testResulte.shape:{_testResulte.shape}")
+            # tqdm.write(f"_testResulte:{_testResulte}")
 
             # test Loss for every epoch
             tqdm.write(color(f"Test Loss: {testLoss:.5f}", "red"))
+            tqdm.write(f"LSD: {batchResulte[0]}")
+            tqdm.write(f"LSD-High: {batchResulte[2]}")
+            tqdm.write(f"SI-SDR: {batchResulte[4]}")
             _testLoss = np.append(_testLoss, testLoss.detach().cpu())
 
         # TODO: save the model and its variables
