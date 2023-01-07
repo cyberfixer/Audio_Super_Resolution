@@ -164,6 +164,13 @@ def main():
 
         # TODO: save the model and its variables
         PATH = f"./checkpoints/{folder}/Epoch{epoch}_loss{int(_testLoss[-1])}.pt"
+        with open(f"./checkpoints/{folder}/log.txt", "a") as f:
+            f.write(f"----------------{epoch}----------------\n")
+            f.write(f"Train Loss: {trainLoss:.5f}")
+            f.write(f"Test Loss: {testLoss:.5f}")
+            f.write(f"LSD: {batchResulte[0]}")
+            f.write(f"LSD-High: {batchResulte[2]}")
+            f.write(f"SI-SDR: {batchResulte[4]}")
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
