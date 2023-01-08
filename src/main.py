@@ -32,13 +32,13 @@ def main():
     model = TUNet().to(device)
 
     # hyperParameters
-    BATCH_SIZE = 2
-    LR = 0.0001
+    BATCH_SIZE = CONFIG.TRAIN.batch_size
+    LR = CONFIG.TRAIN.lr
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
     lr_scheduler = ReduceLROnPlateau(
         optimizer,
-        patience=10,
-        factor=0.75,
+        patience=CONFIG.TRAIN.patience,
+        factor=CONFIG.TRAIN.factor,
         verbose=True,
     )
     # loss class contain MSE & MRSTFTlossDDP * 10000
