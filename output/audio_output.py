@@ -42,51 +42,57 @@ def combineWindows(verticalSignal): # TODO: combine overlapping windows
     for i in verticalSignal.squeeze(1):
         horizontalSignal = torch.cat((horizontalSignal,i))
     return horizontalSignal
-# Device agnostic code
-device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Load the model
-model = TUNet().to(device)
-checkpoint = torch.load(inputCheckpoint, map_location=device)
+def main():
 
-model.load_state_dict(checkpoint['model_state_dict'])
-epoch = checkpoint['epoch']
+    # Device agnostic code
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Get the source audio
-lowSignal = getAudio(os.path.join(inputAudioRoot, inputAudio))
-lowSignal = lowSignal.to(device)
+    # Load the model
+    model = TUNet().to(device)
+    checkpoint = torch.load(inputCheckpoint, map_location=device)
 
-# Set model to evaluation mode
-model.eval()
+    model.load_state_dict(checkpoint['model_state_dict'])
+    epoch = checkpoint['epoch']
 
-with torch.inference_mode():
-    # Predict signal using the model
-    predictedSignal = model(lowSignal)
+    # Get the source audio
+    lowSignal = getAudio(os.path.join(inputAudioRoot, inputAudio))
+    lowSignal = lowSignal.to(device)
 
-    predictedSignal = predictedSignal.detach().cpu()
-    # Combine all audio windows to be 1D array
-    horizontalPredSig = combineWindows(predictedSignal)
-    horizontalPredSig = horizontalPredSig.numpy()
-    # Pad the audio
-    horizontalPredSig = np.pad(horizontalPredSig, horizontalPredSig.size) # ! Temporarily
+    # Set model to evaluation mode
+    model.eval()
 
-    # Output the audio
-    sf.write(os.path.join(outputFolder,'predicted_p255_001_mic1.flac') , data=horizontalPredSig,samplerate=16000, format='flac')
+    with torch.inference_mode():
+        # Predict signal using the model
+        predictedSignal = model(lowSignal)
 
-    # Visualize it
+        predictedSignal = predictedSignal.detach().cpu()
+        # Combine all audio windows to be 1D array
+        horizontalPredSig = combineWindows(predictedSignal)
+        horizontalPredSig = horizontalPredSig.numpy()
+        # Pad the audio
+        horizontalPredSig = np.pad(horizontalPredSig, horizontalPredSig.size) # ! Temporarily
 
-    # Compute the STFT (Short Time Fourier Transform)
-    stft = librosa.stft(horizontalPredSig)
+        # Output the audio
+        sf.write(os.path.join(outputFolder,'predicted_p255_001_mic1.flac') , data=horizontalPredSig,samplerate=16000, format='flac')
 
-    # Convert the STFT matrix to dB scale
-    stft_db = librosa.amplitude_to_db(abs(stft))
+        # Visualize it
 
-    # TODO: Add Subplots for comparison
-    # Plot the spectrogram
-    plt.figure(figsize=(10, 5))
-    librosa.display.specshow(stft_db, x_axis='time', y_axis='linear')
-    plt.colorbar()
-    plt.title('Spectrogram')
-    plt.tight_layout()
-    plt.show()
+        # Compute the STFT (Short Time Fourier Transform)
+        stft = librosa.stft(horizontalPredSig)
+
+        # Convert the STFT matrix to dB scale
+        stft_db = librosa.amplitude_to_db(abs(stft))
+
+        # TODO: Add Subplots for comparison
+        # Plot the spectrogram
+        plt.figure(figsize=(10, 5))
+        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear')
+        plt.colorbar()
+        plt.title('Spectrogram')
+        plt.tight_layout()
+        plt.show()
+    
+    if __name__ == '__main__':
+        main()
     
