@@ -60,7 +60,7 @@ with torch.inference_mode():
     horizontalPredSig = np.pad(horizontalPredSig, horizontalPredSig.size) # ! Temporarily
 
     # Output the audio
-    sf.write('predicted_p255_001_mic1.flac', data=horizontalPredSig,samplerate=16000, format='flac')
+    sf.write('./output/predicted_p255_001_mic1.flac', data=horizontalPredSig,samplerate=16000, format='flac')
 
     # Visualize it
 
