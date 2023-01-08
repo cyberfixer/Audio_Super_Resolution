@@ -22,12 +22,15 @@ from dataset import CustomDataset, frame, pad
 
 inputAudioRoot = './data/vctk/8k/'
 inputAudio = 'p255/p255_001_mic1.flac'
-inputCheckpoint = './checkpoints/Epoch700_loss25935.pt'
+inputCheckpoint = './checkpoints/Epoch200_loss2242.pt'
 
 outputFolder = './output/'
 
-def getAudio(path): # TODO: Upsample the audio, we need to retrain the model before we do that
-    low_sig, _ = librosa.load(path, sr=None)
+def getAudio(path):
+    low_sig, low_sig_sr = librosa.load(path, sr=None)
+
+    # Upsample Audio
+    low_sig = librosa.resample(low_sig, orig_sr=low_sig_sr, target_sr=16000)
     
     if len(low_sig) < CONFIG.DATA.window_size:
         # padding if the window is longer than the signal
@@ -70,8 +73,6 @@ def main():
         # Combine all audio windows to be 1D array
         horizontalPredSig = combineWindows(predictedSignal)
         horizontalPredSig = horizontalPredSig.numpy()
-        # Pad the audio
-        horizontalPredSig = np.pad(horizontalPredSig, horizontalPredSig.size) # ! Temporarily
 
         # Output the audio
         sf.write(os.path.join(outputFolder,'predicted_p255_001_mic1.flac') , data=horizontalPredSig,samplerate=16000, format='flac')
