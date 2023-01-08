@@ -69,9 +69,12 @@ def main():
         os.mkdir(outputFilesPath)
 
     threads = [threading.Thread(target=innerFolders, args=[folders]) for i in range(workers)]
+    
+    # Start threads
     for i in range(workers):
         threads[i].start()
         
+    # Wait for other threads to finish
     for i in range(workers):
         threads[i].join()
         
