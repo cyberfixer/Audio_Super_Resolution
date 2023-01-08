@@ -37,8 +37,8 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
     lr_scheduler = ReduceLROnPlateau(
         optimizer,
-        patience=CONFIG.TRAIN.patience,
-        factor=CONFIG.TRAIN.factor,
+        patience=10,
+        factor=0.75,
         verbose=True,
     )
     # loss class contain MSE & MRSTFTlossDDP * 10000
@@ -81,6 +81,7 @@ def main():
     else:
         """this part will contain torch.load and will load all the variables needed"""
         pass
+
     epochs = 2500
     for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
 
@@ -109,15 +110,12 @@ def main():
             optimizer.step()
 
         # Train loss for the epoch
-        tqdm.write(color(f"Train Loss: {trainLoss:.5f}", "blue"))
+        # tqdm.write(color(f"Train Loss: {trainLoss:.5f}", "blue"))
 
         # _trainLoss will contain list of the trainLoss for every epoch
         _trainLoss = np.append(_trainLoss, trainLoss.detach().cpu())
         # tqdm.write(f"shape of _trainLoss: {_trainLoss.shape}")
         # tqdm.write(f"_trainLoss: {_trainLoss})")
-
-        # lr_scheduler contain the optimizer called every epoch
-        lr_scheduler.step(trainLoss)
 
         """Testing"""
         # Set to test mode
@@ -126,6 +124,8 @@ def main():
             lsdBatch = np.empty(0)
             lsd_highBatch = np.empty(0)
             sisdrBatch = np.empty(0)
+            testLoss = 0
+            num_samples = 0
             for batch, (lowSignal, targetSignal) in enumerate(testDataloader):
                 # Send to GPU
                 lowSignal = lowSignal.to(device)
@@ -135,7 +135,12 @@ def main():
                 predSignal = model(lowSignal)
 
                 # Calculate Loss
-                testLoss = lossfn.loss(predSignal, targetSignal)
+                lossBatch = lossfn.loss(predSignal, targetSignal)
+
+                # the will add up the losses
+                # lowSignal.size(0) is the batch size
+                testLoss += lossBatch * lowSignal.size(0)
+                num_samples += lowSignal.size(0)
 
                 # Calculate Metrics
                 lsd, lsd_high, sisdr = m.compute_metrics(
@@ -146,24 +151,36 @@ def main():
                 lsd_highBatch = np.append(lsd_highBatch, lsd_high)
                 sisdrBatch = np.append(sisdrBatch, sisdr)
 
+            # Compute the average loss
+            testLoss /= num_samples
+            # lr_scheduler contain the optimizer called every epoch
+            lr_scheduler.step(testLoss)
+
             # make the list verticlly
             batchResulte = np.vstack(
                 [lsdBatch.mean(0), lsdBatch.std(0),
                  lsd_highBatch.mean(0), lsd_highBatch.std(0), sisdrBatch.mean(0), sisdrBatch.std(0)])
-            #
+            # adding the batchResulte to _testResulte
             _testResulte = np.concatenate((_testResulte, batchResulte), axis=1)
             # tqdm.write(f"_testResulte.shape:{_testResulte.shape}")
             # tqdm.write(f"_testResulte:{_testResulte}")
 
             # test Loss for every epoch
-            tqdm.write(color(f"Test Loss: {testLoss:.5f}", "red"))
-            tqdm.write(f"LSD: {batchResulte[0]}")
-            tqdm.write(f"LSD-High: {batchResulte[2]}")
-            tqdm.write(f"SI-SDR: {batchResulte[4]}")
+            # tqdm.write(color(f"Test Loss: {testLoss:.5f}", "red"))
+            # tqdm.write(f"LSD: {batchResulte[0]}")
+            # tqdm.write(f"LSD-High: {batchResulte[2]}")
+            # tqdm.write(f"SI-SDR: {batchResulte[4]}")
             _testLoss = np.append(_testLoss, testLoss.detach().cpu())
-
-        # TODO: save the model and its variables
         PATH = f"./checkpoints/{folder}/Epoch{epoch}_loss{int(_testLoss[-1])}.pt"
+        if epoch % 100 == 0:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                '_trainloss': _trainLoss,
+                '_testloss': _testLoss,
+                '_testResulte': _testResulte
+            }, PATH)
         with open(f"./checkpoints/{folder}/log.txt", "a") as f:
             f.write(f"----------------{epoch}----------------\n")
             f.write(f"Train Loss: {trainLoss:.5f}\n")
@@ -174,14 +191,6 @@ def main():
             f.write(f"LSD-High STD: {batchResulte[3]}\n")
             f.write(f"SI-SDR Mean: {batchResulte[4]}\n")
             f.write(f"SI-SDR STD: {batchResulte[5]}\n")
-        torch.save({
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            '_trainloss': _trainLoss,
-            '_testloss': _testLoss,
-            '_testResulte': _testResulte
-        }, PATH)
     # epochlist = list(range(1, epoch+2))
     # fig, ax = plt.subplots(nrows=1, ncols=3)
     # ax[0].plot(epochlist, _testResulte[0])
