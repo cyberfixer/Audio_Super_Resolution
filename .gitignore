@@ -5,5 +5,3 @@ test.py
 *.pt
 log.txt
 data/TEMP.PY
-trainlow.txt
-train.txt
