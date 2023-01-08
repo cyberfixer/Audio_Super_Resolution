@@ -88,7 +88,8 @@ def main():
         """Training"""
         # Set to train mode
         model.train()
-
+        trainLoss = 0
+        num_samples = 0
         for batch, (lowSignal, targetSignal) in enumerate(tqdm(trainDataloader, desc="Epoch", unit=" batchs")):
             # Send to GPU
             lowSignal = lowSignal.to(device)
@@ -98,13 +99,16 @@ def main():
             predSignal = model(lowSignal)
 
             # Calculate Loss
-            trainLoss = lossfn.loss(predSignal, targetSignal)
-
+            lossBatch = lossfn.loss(predSignal, targetSignal)
+            # the will add up the losses
+            # lowSignal.size(0) is the batch size
+            trainLoss += lossBatch * lowSignal.size(0)
+            num_samples += lowSignal.size(0)
             # Zero the gradients
             optimizer.zero_grad()
 
             # Backward Pass
-            trainLoss.backward()
+            lossBatch.backward()
 
             # Update the model's parameters
             optimizer.step()
@@ -113,6 +117,7 @@ def main():
         # tqdm.write(color(f"Train Loss: {trainLoss:.5f}", "blue"))
 
         # _trainLoss will contain list of the trainLoss for every epoch
+        trainLoss /= num_samples
         _trainLoss = np.append(_trainLoss, trainLoss.detach().cpu())
         # tqdm.write(f"shape of _trainLoss: {_trainLoss.shape}")
         # tqdm.write(f"_trainLoss: {_trainLoss})")
