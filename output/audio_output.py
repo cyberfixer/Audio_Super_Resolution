@@ -1,19 +1,30 @@
 # This file converts low sample rate audio to high sample rate audio using the pretrained model (checkpoints)
 
-from loss import MRSTFTLossDDP
+
 import torch
 import torch.nn as nn
-
-from config import CONFIG
-from model import SSAR, TUNet
-from dataset import CustomDataset, frame, pad
-
-
+import os
 import librosa
 import librosa.display
 import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
+
+# Below modules will not be imported without this
+import sys
+sys.path.append('src/')
+
+from config import CONFIG
+from model import SSAR, TUNet
+from dataset import CustomDataset, frame, pad
+
+# Global Variables
+
+inputAudioRoot = './data/vctk/8k/'
+inputAudio = 'p255/p255_001_mic1.flac'
+inputCheckpoint = './checkpoints/Epoch700_loss25935.pt'
+
+outputFolder = './output/'
 
 def getAudio(path): # TODO: Upsample the audio, we need to retrain the model before we do that
     low_sig, _ = librosa.load(path, sr=None)
@@ -36,13 +47,13 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load the model
 model = TUNet().to(device)
-checkpoint = torch.load('./checkpoints/Epoch700_loss25935.pt',map_location=device)
+checkpoint = torch.load(inputCheckpoint, map_location=device)
 
 model.load_state_dict(checkpoint['model_state_dict'])
 epoch = checkpoint['epoch']
 
 # Get the source audio
-lowSignal = getAudio('./data/vctk/8k/p255/p255_001_mic1.flac')
+lowSignal = getAudio(os.path.join(inputAudioRoot, inputAudio))
 lowSignal = lowSignal.to(device)
 
 # Set model to evaluation mode
@@ -60,7 +71,7 @@ with torch.inference_mode():
     horizontalPredSig = np.pad(horizontalPredSig, horizontalPredSig.size) # ! Temporarily
 
     # Output the audio
-    sf.write('./output/predicted_p255_001_mic1.flac', data=horizontalPredSig,samplerate=16000, format='flac')
+    sf.write(os.path.join(outputFolder,'predicted_p255_001_mic1.flac') , data=horizontalPredSig,samplerate=16000, format='flac')
 
     # Visualize it
 
