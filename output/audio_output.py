@@ -23,7 +23,7 @@ from dataset import CustomDataset, frame, pad
 inputAudioRoot = './data/vctk/8k/'
 inputTargetAudioRoot = './data/vctk/16k/'
 inputAudio = 'p255/p255_001_mic1.flac'
-inputCheckpoint = './checkpoints/Epoch200_loss2242.pt'
+inputCheckpoint = './checkpoints/Epoch1700_loss2219.pt'
 
 outputFolder = './output/'
 
@@ -32,14 +32,14 @@ def getAudio(relpath):
     high_sig, _ = librosa.load(os.path.join(inputTargetAudioRoot + relpath), sr=None)
 
     # Upsample Audio
-    low_sig_upsampled = librosa.resample(low_sig, orig_sr=low_sig_sr, target_sr=16000)
+    low_sig = librosa.resample(low_sig, orig_sr=low_sig_sr, target_sr=16000)
     
-    if len(low_sig_upsampled) < CONFIG.DATA.window_size:
+    if len(low_sig) < CONFIG.DATA.window_size:
         # padding if the window is longer than the signal
-        low_sig_upsampled = pad(low_sig_upsampled, CONFIG.DATA.window_size)
+        low_sig = pad(low_sig, CONFIG.DATA.window_size)
 
 
-    x = frame(low_sig_upsampled, CONFIG.DATA.window_size, CONFIG.DATA.stride)[:, np.newaxis, :]
+    x = frame(low_sig, CONFIG.DATA.window_size, CONFIG.DATA.stride)[:, np.newaxis, :]
     return torch.tensor(x), low_sig, high_sig
 
 def combineWindows(verticalSignal): # TODO: combine overlapping windows
@@ -91,10 +91,9 @@ def main():
 
         # Plot the spectrogram
         fig.add_subplot(1,3,1)
-        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=8000)
+        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=16000)
         plt.colorbar()
         plt.title('Original')
-        plt.ylim(top=8000)
         plt.tight_layout()
 
         ''' PREDICTED SIGNAL SUBPLOT '''
