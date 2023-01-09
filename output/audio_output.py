@@ -48,6 +48,21 @@ def combineWindows(verticalSignal): # TODO: combine overlapping windows
         horizontalSignal = torch.cat((horizontalSignal,i))
     return horizontalSignal
 
+def plotSpectrogram(fig, title, data, sr, index):
+        # Compute the STFT (Short Time Fourier Transform)
+        stft = librosa.stft(data)
+        # Convert the STFT matrix to dB scale
+        stft_db = librosa.amplitude_to_db(abs(stft))
+
+        # Plot the spectrogram
+        fig.add_subplot(1,3,index)
+        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=sr)
+        plt.colorbar()
+        plt.title(title)
+        plt.tight_layout()
+
+
+
 def main():
 
     # Device agnostic code
@@ -83,44 +98,14 @@ def main():
         # TODO: MAKE THE SAMPLE RATE OF EACH SPECSHOW FUNCTION DYNAMIC
         fig = plt.figure(figsize=(15, 8))
 
-        ''' LOW SIGNAL SUBPLOT '''
-        # Compute the STFT (Short Time Fourier Transform)
-        stft = librosa.stft(lowSignal)
-        # Convert the STFT matrix to dB scale
-        stft_db = librosa.amplitude_to_db(abs(stft))
+        # LOW SIGNAL SUBPLOT
+        plotSpectrogram(fig, 'Original', lowSignal, 16000, 1)
 
-        # Plot the spectrogram
-        fig.add_subplot(1,3,1)
-        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=16000)
-        plt.colorbar()
-        plt.title('Original')
-        plt.tight_layout()
+        # PREDICTED SIGNAL SUBPLOT
+        plotSpectrogram(fig, 'Predicted', predictedSignal, 16000, 2)
 
-        ''' PREDICTED SIGNAL SUBPLOT '''
-        # Compute the STFT (Short Time Fourier Transform)
-        stft = librosa.stft(horizontalPredSig)
-        # Convert the STFT matrix to dB scale
-        stft_db = librosa.amplitude_to_db(abs(stft))
-
-        # Plot the spectrogram
-        fig.add_subplot(1,3,2)
-        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=16000)
-        plt.colorbar()
-        plt.title('Predicted')
-        plt.tight_layout()
-
-        ''' HIGH SIGNAL SUBPLOT '''
-        # Compute the STFT (Short Time Fourier Transform)
-        stft = librosa.stft(highSignal)
-        # Convert the STFT matrix to dB scale
-        stft_db = librosa.amplitude_to_db(abs(stft))
-
-        # Plot the spectrogram
-        fig.add_subplot(1,3,3)
-        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=16000)
-        plt.colorbar()
-        plt.title('Target')
-        plt.tight_layout()
+        # TARGET SIGNAL SUBPLOT
+        plotSpectrogram(fig, 'Predicted', predictedSignal, 16000, 3)
 
         plt.subplots_adjust(wspace=0.15)
         plt.savefig(os.path.join(outputFolder, 'fig'))
