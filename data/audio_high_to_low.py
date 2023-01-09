@@ -5,8 +5,10 @@ from tqdm import tqdm  # progress bar
 import os
 
 inputFilesPath = './data/vctk/48k'
-outputFilesPath = './data/vctk/16k'
+outputFilesPath = './data/vctk/8k resampled 16k'
+
 targetsr = 16000
+datasr = 8000
 
 
 def main():
@@ -34,6 +36,13 @@ def main():
 
             # Downsampling the audio
             signal, samplerate = librosa.load(filePath, sr=None)
+            # If the datasr is not the same as targetsr
+            if datasr < targetsr:
+                # Downsample the data
+                signal = librosa.resample(
+                    signal, orig_sr=samplerate, target_sr=datasr)
+                samplerate = datasr
+            # After that it will up sample it to targetsr
             signalLow = librosa.resample(
                 signal, orig_sr=samplerate, target_sr=targetsr)
 
