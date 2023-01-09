@@ -105,8 +105,8 @@ class CustomDataset(Dataset):
         # there was in this sliceing numpy.newaxis
 
         X = frame(low_sig, self.window, self.stride)[:, np.newaxis, :]
-        # if self.mode == 'test':
-        #     return X, target, low_sig # idk why you need that for testing
+        if self.mode == 'test1':
+            return X, target, low_sig
 
         # stacks the windows virticlay y=(window_number, amplitude samples)
         # there was in this sliceing numpy.newaxis #,
