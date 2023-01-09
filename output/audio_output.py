@@ -102,10 +102,10 @@ def main():
         plotSpectrogram(fig, 'Original', lowSignal, 16000, 1)
 
         # PREDICTED SIGNAL SUBPLOT
-        plotSpectrogram(fig, 'Predicted', predictedSignal, 16000, 2)
+        plotSpectrogram(fig, 'Predicted', horizontalPredSig, 16000, 2)
 
         # TARGET SIGNAL SUBPLOT
-        plotSpectrogram(fig, 'Predicted', predictedSignal, 16000, 3)
+        plotSpectrogram(fig, 'Predicted', highSignal, 16000, 3)
 
         plt.subplots_adjust(wspace=0.15)
         plt.savefig(os.path.join(outputFolder, 'fig'))
