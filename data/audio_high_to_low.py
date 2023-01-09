@@ -13,9 +13,9 @@ datasr = 8000
 
 def main():
     folders = glob(inputFilesPath + '/*')
-    for folderPath in tqdm(folders, desc='Total'):  # All folders
+    for folderPath in tqdm(folders, desc='Total',  dynamic_ncols=True):  # All folders
         # All files in each folder
-        for filePath in tqdm(glob(folderPath + '/*'), desc=os.path.basename(folderPath), leave=False):
+        for filePath in tqdm(glob(folderPath + '/*'), desc=os.path.basename(folderPath), leave=False, dynamic_ncols=True):
 
             # Path Calculculations
             fileName = os.path.basename(filePath)
