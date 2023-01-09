@@ -5,7 +5,7 @@ from tqdm import tqdm  # progress bar
 import os
 
 inputFilesPath = './data/vctk/48k'
-outputFilesPath = './data/vctk/8k resampled 16k'
+outputFilesPath = './data/vctk/8k16k'
 
 targetsr = 16000
 datasr = 8000
