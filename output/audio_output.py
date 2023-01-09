@@ -124,6 +124,7 @@ def main():
         plt.tight_layout()
 
         plt.subplots_adjust(wspace=0.15)
+        plt.savefig(os.path.join(outputFolder, 'fig'))
         plt.show()
     
 if __name__ == '__main__':
