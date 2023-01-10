@@ -81,14 +81,14 @@ def main():
         pass
 
     epochs = 2500
-    for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
+    for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch", dynamic_ncols=True):
 
         """Training"""
         # Set to train mode
         model.train()
         trainLoss = 0
         num_samples = 0
-        for batch, (lowSignal, targetSignal) in enumerate(tqdm(trainDataloader, desc="Epoch", unit=" batchs")):
+        for batch, (lowSignal, targetSignal) in enumerate(tqdm(trainDataloader, desc="Epoch", unit=" batchs", dynamic_ncols=True)):
             # Send to GPU
             lowSignal = lowSignal.to(device)
             targetSignal = targetSignal.to(device)
