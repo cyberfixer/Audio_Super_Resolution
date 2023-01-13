@@ -43,6 +43,39 @@ def getAudio(relpath):
     x = frame(low_sig, CONFIG.DATA.window_size, CONFIG.DATA.stride)[:, np.newaxis, :]
     return torch.tensor(x), low_sig, high_sig
 
+def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal, spectrogram=True):
+    # Get the folder name and file extension
+    folderName, fileExtension = os.path.splitext(os.path.basename(inputAudio))
+    fileExtension = fileExtension[1:] # remove the . from the file extension
+    folderPath = os.path.join(outputFolder, folderName)
+
+    # Create Folders if missing
+    if os.path.isdir(folderPath) is not True:
+        os.mkdir(folderPath)
+    
+    # Save the files
+    sf.write(os.path.join(folderPath,'low'+'.'+fileExtension) , data=lowSignal,samplerate=inputPredictedAudioSR, format=fileExtension)
+    sf.write(os.path.join(folderPath,'predicted'+'.'+fileExtension) , data=predictedSignal,samplerate=inputPredictedAudioSR, format=fileExtension)
+    sf.write(os.path.join(folderPath,'target'+'.'+fileExtension) , data=highSignal,samplerate=inputPredictedAudioSR, format=fileExtension)
+
+    # Visualize audio
+    fig = plt.figure(figsize=(15, 8))
+
+    # LOW SIGNAL SUBPLOT
+    plotSpectrogram(fig, 'Low', lowSignal, inputPredictedAudioSR, 1)
+
+    # PREDICTED SIGNAL SUBPLOT
+    plotSpectrogram(fig, 'Predicted', predictedSignal, inputPredictedAudioSR, 2)
+
+    # TARGET SIGNAL SUBPLOT
+    plotSpectrogram(fig, 'Target', highSignal, inputPredictedAudioSR, 3)
+
+    plt.subplots_adjust(wspace=0.15)
+    plt.savefig(os.path.join(folderPath, 'fig'))
+    
+    if spectrogram:
+        plt.show()
+
 def combineWindows(verticalSignal): # TODO: combine overlapping windows
     horizontalSignal = torch.empty(0)
     for i in verticalSignal.squeeze(1):
@@ -65,6 +98,7 @@ def plotSpectrogram(fig, title, data, sr, index):
 
 
 def main():
+
 
     # Device agnostic code
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -95,22 +129,8 @@ def main():
         # Output the audio
         sf.write(os.path.join(outputFolder,'predicted_p255_001_mic1.flac') , data=horizontalPredSig,samplerate=inputPredictedAudioSR, format='flac')
 
-        # Visualize it
-        # TODO: MAKE THE SAMPLE RATE OF EACH SPECSHOW FUNCTION DYNAMIC
-        fig = plt.figure(figsize=(15, 8))
-
-        # LOW SIGNAL SUBPLOT
-        plotSpectrogram(fig, 'Original', lowSignal, inputPredictedAudioSR, 1)
-
-        # PREDICTED SIGNAL SUBPLOT
-        plotSpectrogram(fig, 'Predicted', horizontalPredSig, inputPredictedAudioSR, 2)
-
-        # TARGET SIGNAL SUBPLOT
-        plotSpectrogram(fig, 'Target', highSignal, inputPredictedAudioSR, 3)
-
-        plt.subplots_adjust(wspace=0.15)
-        plt.savefig(os.path.join(outputFolder, 'fig'))
-        plt.show()
+        # Save audio and show spectrogram
+        saveAudioAndSpectrogram(lowSignal,horizontalPredSig,highSignal)
     
 if __name__ == '__main__':
     main()
