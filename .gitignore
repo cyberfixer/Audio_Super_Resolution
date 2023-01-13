@@ -5,3 +5,4 @@ test.py
 *.pt
 log.txt
 data/TEMP.PY
+*.png
