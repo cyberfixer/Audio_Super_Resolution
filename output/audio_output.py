@@ -23,6 +23,7 @@ from dataset import CustomDataset, frame, pad
 inputAudioRoot = './data/vctk/8k/'
 inputTargetAudioRoot = './data/vctk/16k/'
 inputAudio = 'p255/p255_001_mic1.flac'
+inputPredictedAudioSR = 16000
 inputCheckpoint = './checkpoints/Epoch1700_loss2219.pt'
 
 outputFolder = './output/'
@@ -32,7 +33,7 @@ def getAudio(relpath):
     high_sig, _ = librosa.load(os.path.join(inputTargetAudioRoot + relpath), sr=None)
 
     # Upsample Audio
-    low_sig = librosa.resample(low_sig, orig_sr=low_sig_sr, target_sr=16000)
+    low_sig = librosa.resample(low_sig, orig_sr=low_sig_sr, target_sr=inputPredictedAudioSR)
     
     if len(low_sig) < CONFIG.DATA.window_size:
         # padding if the window is longer than the signal
@@ -92,20 +93,20 @@ def main():
         horizontalPredSig = horizontalPredSig.numpy()
 
         # Output the audio
-        sf.write(os.path.join(outputFolder,'predicted_p255_001_mic1.flac') , data=horizontalPredSig,samplerate=16000, format='flac')
+        sf.write(os.path.join(outputFolder,'predicted_p255_001_mic1.flac') , data=horizontalPredSig,samplerate=inputPredictedAudioSR, format='flac')
 
         # Visualize it
         # TODO: MAKE THE SAMPLE RATE OF EACH SPECSHOW FUNCTION DYNAMIC
         fig = plt.figure(figsize=(15, 8))
 
         # LOW SIGNAL SUBPLOT
-        plotSpectrogram(fig, 'Original', lowSignal, 16000, 1)
+        plotSpectrogram(fig, 'Original', lowSignal, inputPredictedAudioSR, 1)
 
         # PREDICTED SIGNAL SUBPLOT
-        plotSpectrogram(fig, 'Predicted', horizontalPredSig, 16000, 2)
+        plotSpectrogram(fig, 'Predicted', horizontalPredSig, inputPredictedAudioSR, 2)
 
         # TARGET SIGNAL SUBPLOT
-        plotSpectrogram(fig, 'Target', highSignal, 16000, 3)
+        plotSpectrogram(fig, 'Target', highSignal, inputPredictedAudioSR, 3)
 
         plt.subplots_adjust(wspace=0.15)
         plt.savefig(os.path.join(outputFolder, 'fig'))
