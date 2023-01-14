@@ -46,6 +46,19 @@ def getAudio(relpath):
     x = frame(low_sig, CONFIG.DATA.window_size, CONFIG.DATA.stride)[:, np.newaxis, :]
     return torch.tensor(x), low_sig, high_sig
 
+def plotSpectrogram(fig, title, data, sr, index):
+        # Compute the STFT (Short Time Fourier Transform)
+        stft = librosa.stft(data)
+        # Convert the STFT matrix to dB scale
+        stft_db = librosa.amplitude_to_db(abs(stft))
+
+        # Plot the spectrogram
+        fig.add_subplot(1,3,index)
+        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=sr)
+        plt.colorbar()
+        plt.title(title)
+        plt.tight_layout()
+
 def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal, spectrogram=True):
     # Get the folder name and file extension
     folderName, fileExtension = os.path.splitext(os.path.basename(inputAudio))
@@ -101,20 +114,6 @@ def combineWindows(verticalSignal,inputAudioLen):
     # return horizontalSignal
     horizontalSignal = horizontalSignal.squeeze(1)[0]
     return horizontalSignal
-
-def plotSpectrogram(fig, title, data, sr, index):
-        # Compute the STFT (Short Time Fourier Transform)
-        stft = librosa.stft(data)
-        # Convert the STFT matrix to dB scale
-        stft_db = librosa.amplitude_to_db(abs(stft))
-
-        # Plot the spectrogram
-        fig.add_subplot(1,3,index)
-        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=sr)
-        plt.colorbar()
-        plt.title(title)
-        plt.tight_layout()
-
 
 
 def main():
