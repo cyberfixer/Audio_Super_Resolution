@@ -92,7 +92,7 @@ def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal, spectrogram=
     if spectrogram:
         plt.show()
 
-def overlap_add(audioData, win_len, hop_size, target_shape): # ! IT CUTS OFF AT THE END
+def overlap_add(audioData:torch.Tensor, win_len, hop_size, target_shape) -> torch.Tensor: # ! IT CUTS OFF AT THE END
     # target.shape = (B, C, seq_len) = (Batch, Channels, seq_len)
     # x.shape = (B*n_chunks, C, win_len) , n_chunks = (seq_len - hop_size)/(win_len - hop_size)
     bs, channels, seq_len = target_shape
@@ -106,13 +106,11 @@ def overlap_add(audioData, win_len, hop_size, target_shape): # ! IT CUTS OFF AT 
     audioData = audioData.reshape(channels, bs, seq_len).permute(1, 0, 2)  # B, C, seq_len
     return audioData
 
-def combineWindows(verticalSignal,inputAudioLen):
+def combineWindows(verticalSignal:torch.Tensor,inputAudioLen):
     horizontalSignal = overlap_add(verticalSignal, CONFIG.DATA.window_size, CONFIG.DATA.stride, (1,1,inputAudioLen))
-    # horizontalSignal = torch.empty(0)
-    # for i in verticalSignal.squeeze(1):
-    #     horizontalSignal = torch.cat((horizontalSignal,i))
-    # return horizontalSignal
-    horizontalSignal = horizontalSignal.squeeze(1)[0]
+
+    # Flatten the tensor
+    horizontalSignal = horizontalSignal.reshape(-1)
     return horizontalSignal
 
 
