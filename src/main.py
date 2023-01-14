@@ -64,6 +64,7 @@ def main():
     _testLoss = np.empty(0)
     _testResulte = np.empty((6, 0))
     epochs = 500
+    epoch = 0
     # this variable will determen that is new train or will load a model
     newTrain = True
     if newTrain == True:
@@ -78,10 +79,23 @@ def main():
             pass
     else:
         """this part will contain torch.load and will load all the variables needed"""
-        pass
+        PATH = ""
+        folder = PATH.split('/')[2]
 
-   
-    for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch", dynamic_ncols=True):
+        checkpoint = torch.load(PATH)
+        epoch = checkpoint['epoch']
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        _trainLoss = checkpoint['_trainloss']
+        _testLoss = checkpoint['_testloss']
+        _testResulte = checkpoint['_testResulte']
+
+        with open(f"./checkpoints/{folder}/log.txt", "a") as f:
+            f.write(f"|||||||||||Reloaded the model||||||||||\n")
+            f.write(f"|||||||||||Reloaded the model||||||||||\n")
+            f.write(f"----------------{epoch}----------------\n")
+
+    for epoch in tqdm(range(epoch, epochs), desc=f"Total", unit="Epoch", dynamic_ncols=True):
 
         """Training"""
         # Set to train mode
