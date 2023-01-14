@@ -133,9 +133,16 @@ def remove_overlap(signal, window_size, stride):
     return np.concatenate(non_overlap_windows)
 
 def combineWindows(verticalSignal:torch.Tensor,inputAudioLen):
+    # BETTER BUT DOES NOT WORK VERY WELL
     #horizontalSignal = overlap_add(verticalSignal, CONFIG.DATA.window_size, CONFIG.DATA.stride, (1,1,inputAudioLen))
-    
 
+    # Crude method
+    horizontalSignal = torch.empty(0)
+    for i in verticalSignal.squeeze(1):
+        horizontalSignal = torch.cat((horizontalSignal, i))
+
+    horizontalSignal = horizontalSignal
+    horizontalSignal = remove_overlap(horizontalSignal, CONFIG.DATA.window_size, CONFIG.DATA.stride)
     # Flatten the tensor
     horizontalSignal = horizontalSignal.reshape(-1)
     return horizontalSignal
@@ -164,7 +171,6 @@ def main():
         predictedSignal = predictedSignal.detach().cpu()
         # Combine all audio windows to be 1D array
         horizontalPredSig = combineWindows(predictedSignal, len(lowSignal))
-        horizontalPredSig = horizontalPredSig.numpy()
 
         # Save audio and show spectrogram
         saveAudioAndSpectrogram(lowSignal,horizontalPredSig,highSignal)
