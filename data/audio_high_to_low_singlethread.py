@@ -4,7 +4,7 @@ from glob import glob  # get full path of all files
 from tqdm import tqdm  # progress bar
 import os
 
-inputFilesPath = './data/vctk/8kk'
+inputFilesPath = './data/vctk/8k'
 outputFilesPath = './data/vctk/8k16k'
 targetsr = 16000
 
