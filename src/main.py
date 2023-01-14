@@ -80,7 +80,7 @@ def main():
         """this part will contain torch.load and will load all the variables needed"""
         pass
 
-    epochs = 2500
+    epochs = 500
     for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch", dynamic_ncols=True):
 
         """Training"""
