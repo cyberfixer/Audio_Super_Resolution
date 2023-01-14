@@ -24,8 +24,6 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 def main():
-    #
-
     # device agnastic code
     device = "cuda" if torch.cuda.is_available() else "cpu"
     # creating the model and sending it to the device
@@ -82,15 +80,15 @@ def main():
         """this part will contain torch.load and will load all the variables needed"""
         pass
 
-    epochs = 2500
-    for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch"):
+    epochs = 500
+    for epoch in tqdm(range(epochs), desc=f"Total", unit="Epoch", dynamic_ncols=True):
 
         """Training"""
         # Set to train mode
         model.train()
         trainLoss = 0
         num_samples = 0
-        for batch, (lowSignal, targetSignal) in enumerate(tqdm(trainDataloader, desc="Epoch", unit=" batchs")):
+        for batch, (lowSignal, targetSignal) in enumerate(tqdm(trainDataloader, desc="Epoch", unit=" batchs", dynamic_ncols=True)):
             # Send to GPU
             lowSignal = lowSignal.to(device)
             targetSignal = targetSignal.to(device)
@@ -113,14 +111,10 @@ def main():
             # Update the model's parameters
             optimizer.step()
 
-        # Train loss for the epoch
-        # tqdm.write(color(f"Train Loss: {trainLoss:.5f}", "blue"))
-
-        # _trainLoss will contain list of the trainLoss for every epoch
+        # trainloss avrage
         trainLoss /= num_samples
+        # _trainLoss will contain list of the trainLoss for every epoch
         _trainLoss = np.append(_trainLoss, trainLoss.detach().cpu())
-        # tqdm.write(f"shape of _trainLoss: {_trainLoss.shape}")
-        # tqdm.write(f"_trainLoss: {_trainLoss})")
 
         """Testing"""
         # Set to test mode
@@ -156,10 +150,12 @@ def main():
                 lsd_highBatch = np.append(lsd_highBatch, lsd_high)
                 sisdrBatch = np.append(sisdrBatch, sisdr)
 
-            # Compute the average loss
-            testLoss /= num_samples
             # lr_scheduler contain the optimizer called every epoch
             lr_scheduler.step(testLoss)
+            # Compute the average loss
+            testLoss /= num_samples
+            # _testLoss will contain list of the testLoss for every epoch
+            _testLoss = np.append(_testLoss, testLoss.detach().cpu())
 
             # make the list verticlly
             batchResulte = np.vstack(
@@ -167,15 +163,8 @@ def main():
                  lsd_highBatch.mean(0), lsd_highBatch.std(0), sisdrBatch.mean(0), sisdrBatch.std(0)])
             # adding the batchResulte to _testResulte
             _testResulte = np.concatenate((_testResulte, batchResulte), axis=1)
-            # tqdm.write(f"_testResulte.shape:{_testResulte.shape}")
-            # tqdm.write(f"_testResulte:{_testResulte}")
 
-            # test Loss for every epoch
-            # tqdm.write(color(f"Test Loss: {testLoss:.5f}", "red"))
-            # tqdm.write(f"LSD: {batchResulte[0]}")
-            # tqdm.write(f"LSD-High: {batchResulte[2]}")
-            # tqdm.write(f"SI-SDR: {batchResulte[4]}")
-            _testLoss = np.append(_testLoss, testLoss.detach().cpu())
+        # PATH of the checkpoint
         PATH = f"./checkpoints/{folder}/Epoch{epoch}_loss{int(_testLoss[-1])}.pt"
         if epoch % 100 == 0:
             torch.save({
@@ -186,6 +175,8 @@ def main():
                 '_testloss': _testLoss,
                 '_testResulte': _testResulte
             }, PATH)
+
+        # this will make log.txt file
         with open(f"./checkpoints/{folder}/log.txt", "a") as f:
             f.write(f"----------------{epoch}----------------\n")
             f.write(f"Train Loss: {trainLoss:.5f}\n")
@@ -196,18 +187,6 @@ def main():
             f.write(f"LSD-High STD: {batchResulte[3]}\n")
             f.write(f"SI-SDR Mean: {batchResulte[4]}\n")
             f.write(f"SI-SDR STD: {batchResulte[5]}\n")
-    # epochlist = list(range(1, epoch+2))
-    # fig, ax = plt.subplots(nrows=1, ncols=3)
-    # ax[0].plot(epochlist, _testResulte[0])
-    # ax[0].set_xlabel("Epochs")
-    # ax[0].set_title("LSD")
-    # ax[1].plot(epochlist, _testResulte[2])
-    # ax[1].set_xlabel("Epochs")
-    # ax[1].set_title("LSD_High")
-    # ax[2].plot(epochlist, _testResulte[4])
-    # ax[2].set_xlabel("Epochs")
-    # ax[2].set_title("SI_SDR")
-    # plt.show()
 
 
 if __name__ == "__main__":
