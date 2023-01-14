@@ -99,11 +99,18 @@ def overlap_add(audioData:torch.Tensor, win_len, hop_size, target_shape) -> torc
     hann_windows = torch.ones(audioData.shape, device=device) * torch.hann_window(win_len, device=device)
     hann_windows[0, :, :hop_size] = 1
     hann_windows[-1, :, -hop_size:] = 1
+    
     audioData *= hann_windows.cpu().numpy()
-    audioData = audioData.permute(1, 0, 2).reshape(bs * channels, -1, win_len).permute(0, 2, 1)  # B*C, win_len, n_chunks
+
+    audioData = audioData.permute(1, 0, 2)
+    audioData = audioData.reshape(bs * channels, -1, win_len)
+    audioData = audioData.permute(0, 2, 1)  # B*C, win_len, n_chunks
+
     fold = torch.nn.Fold(output_size=(1, seq_len), kernel_size=(1, win_len), stride=(1, hop_size))
+
     audioData = fold(audioData)  # B*C, 1, 1, seq_len
-    audioData = audioData.reshape(channels, bs, seq_len).permute(1, 0, 2)  # B, C, seq_len
+    audioData = audioData.reshape(channels, bs, seq_len)
+    audioData = audioData.permute(1, 0, 2)  # B, C, seq_len
     return audioData
 
 def combineWindows(verticalSignal:torch.Tensor,inputAudioLen):
