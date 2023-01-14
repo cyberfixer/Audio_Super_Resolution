@@ -103,39 +103,13 @@ def overlap_add(audioData:torch.Tensor, win_len, hop_size, target_shape) -> torc
     audioData = audioData.reshape(channels, bs, seq_len).permute(1, 0, 2)  # B, C, seq_len
     return audioData
 
-def remove_overlap(signal, window_size, stride):
-    # Initialize a list to store the non-overlapping windows
-    non_overlap_windows = []
-    # calculate the index of windows
-    indices = np.arange(0, len(signal) + 1, stride)
-    
-    
-    # Iterate over the windows
-    for j,i in enumerate(indices):
-        # Append the current window to the list of non-overlapping windows
-        if j %2 == 0:
-            end =i+stride
-            non_overlap_windows.append(signal[i: end])
-    if len(indices)%2!=0:
-         non_overlap_windows.append(signal[indices[-2]: indices[-1]])
-        
-    # Concatenate the non-overlapping windows and return the result
-    return np.concatenate(non_overlap_windows)
-
 def combineWindows(verticalSignal:torch.Tensor,inputAudioLen):
     # BETTER BUT DOES NOT WORK VERY WELL
-    #horizontalSignal = overlap_add(verticalSignal, CONFIG.DATA.window_size, CONFIG.DATA.stride, (1,1,inputAudioLen))
+    horizontalSignal = overlap_add(verticalSignal, CONFIG.DATA.window_size, CONFIG.DATA.stride, (1,1,inputAudioLen))
 
-    # Crude method
-    horizontalSignal = torch.empty(0)
-    for i in verticalSignal.squeeze(1):
-        horizontalSignal = torch.cat((horizontalSignal, i))
-
-    horizontalSignal = horizontalSignal
-    horizontalSignal = remove_overlap(horizontalSignal, CONFIG.DATA.window_size, CONFIG.DATA.stride)
     # Flatten the tensor
     horizontalSignal = horizontalSignal.reshape(-1)
-    return horizontalSignal
+    return horizontalSignal.numpy()
 
 
 def main():
