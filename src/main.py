@@ -166,7 +166,7 @@ def main():
 
         # PATH of the checkpoint
         PATH = f"./checkpoints/{folder}/Epoch{epoch}_loss{int(_testLoss[-1])}.pt"
-        if epoch % 100 == 0:
+        if epoch % 25 == 0:
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
