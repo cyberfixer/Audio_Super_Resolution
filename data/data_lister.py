@@ -31,7 +31,7 @@ def listerTrainlow(samplingRateFolderName):
 
 def main():
     samplingRateFolderNameTarget = "16k"
-    samplingRateFolderNameLow = "8k"
+    samplingRateFolderNameLow = "8k16k"
     listerTrainTarget(samplingRateFolderNameTarget)
     listerTrainlow(samplingRateFolderNameLow)
 
