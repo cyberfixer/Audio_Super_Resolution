@@ -28,6 +28,9 @@ inputCheckpoint = './checkpoints/Epoch1700_loss2219.pt'
 
 outputFolder = './output/'
 
+# Device agnostic code
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 def getAudio(relpath):
     low_sig, low_sig_sr = librosa.load(os.path.join(inputAudioRoot + relpath), sr=None)
     high_sig, _ = librosa.load(os.path.join(inputTargetAudioRoot + relpath), sr=None)
@@ -76,10 +79,27 @@ def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal, spectrogram=
     if spectrogram:
         plt.show()
 
-def combineWindows(verticalSignal): # TODO: combine overlapping windows
-    horizontalSignal = torch.empty(0)
-    for i in verticalSignal.squeeze(1):
-        horizontalSignal = torch.cat((horizontalSignal,i))
+def overlap_add(audioData, win_len, hop_size, target_shape): # ! IT CUTS OFF AT THE END
+    # target.shape = (B, C, seq_len) = (Batch, Channels, seq_len)
+    # x.shape = (B*n_chunks, C, win_len) , n_chunks = (seq_len - hop_size)/(win_len - hop_size)
+    bs, channels, seq_len = target_shape
+    hann_windows = torch.ones(audioData.shape, device=device) * torch.hann_window(win_len, device=device)
+    hann_windows[0, :, :hop_size] = 1
+    hann_windows[-1, :, -hop_size:] = 1
+    audioData *= hann_windows.cpu().numpy()
+    audioData = audioData.permute(1, 0, 2).reshape(bs * channels, -1, win_len).permute(0, 2, 1)  # B*C, win_len, n_chunks
+    fold = torch.nn.Fold(output_size=(1, seq_len), kernel_size=(1, win_len), stride=(1, hop_size))
+    audioData = fold(audioData)  # B*C, 1, 1, seq_len
+    audioData = audioData.reshape(channels, bs, seq_len).permute(1, 0, 2)  # B, C, seq_len
+    return audioData
+
+def combineWindows(verticalSignal,inputAudioLen):
+    horizontalSignal = overlap_add(verticalSignal, CONFIG.DATA.window_size, CONFIG.DATA.stride, (1,1,inputAudioLen))
+    # horizontalSignal = torch.empty(0)
+    # for i in verticalSignal.squeeze(1):
+    #     horizontalSignal = torch.cat((horizontalSignal,i))
+    # return horizontalSignal
+    horizontalSignal = horizontalSignal.squeeze(1)[0]
     return horizontalSignal
 
 def plotSpectrogram(fig, title, data, sr, index):
@@ -98,10 +118,6 @@ def plotSpectrogram(fig, title, data, sr, index):
 
 
 def main():
-
-
-    # Device agnostic code
-    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Load the model
     model = TUNet().to(device)
@@ -123,11 +139,8 @@ def main():
 
         predictedSignal = predictedSignal.detach().cpu()
         # Combine all audio windows to be 1D array
-        horizontalPredSig = combineWindows(predictedSignal)
+        horizontalPredSig = combineWindows(predictedSignal, len(lowSignal))
         horizontalPredSig = horizontalPredSig.numpy()
-
-        # Output the audio
-        sf.write(os.path.join(outputFolder,'predicted_p255_001_mic1.flac') , data=horizontalPredSig,samplerate=inputPredictedAudioSR, format='flac')
 
         # Save audio and show spectrogram
         saveAudioAndSpectrogram(lowSignal,horizontalPredSig,highSignal)
