@@ -48,14 +48,16 @@ def main():
     trainDataloader = DataLoader(
         train_data,  # dataset to turn into iterable
         batch_size=BATCH_SIZE,  # how many samples per batch?
-        shuffle=True,  # shuffle data every epoch?
         collate_fn=CustomDataset.collate_fn,
+        num_workers=CONFIG.TRAIN.workers,
+        pin_memory=True,
     )
     testDataloader = DataLoader(
         test_data,  # dataset to turn into iterable
         batch_size=BATCH_SIZE,  # how many samples per batch?
-        shuffle=True,  # shuffle data every epoch?
         collate_fn=CustomDataset.collate_fn,
+        num_workers=CONFIG.TRAIN.workers,
+        pin_memory=True,
     )
 
     # log variables
@@ -66,7 +68,7 @@ def main():
     epochs = 500
     epoch = 0
     # this variable will determen that is new train or will load a model
-    newTrain = True
+    newTrain = False
     if newTrain == True:
         now = datetime.now()  # current date and time
         # folder name for the checkpoints
@@ -79,7 +81,7 @@ def main():
             pass
     else:
         """this part will contain torch.load and will load all the variables needed"""
-        PATH = ""
+        PATH = "./checkpoints/01-14 PM 07-18-11/Epoch100_loss1476.pt"
         folder = PATH.split('/')[2]
 
         checkpoint = torch.load(PATH)
@@ -93,9 +95,8 @@ def main():
         with open(f"./checkpoints/{folder}/log.txt", "a") as f:
             f.write(f"|||||||||||Reloaded the model||||||||||\n")
             f.write(f"|||||||||||Reloaded the model||||||||||\n")
-            f.write(f"----------------{epoch}----------------\n")
 
-    for epoch in tqdm(range(epoch, epochs), desc=f"Total", unit="Epoch", dynamic_ncols=True):
+    for epoch in tqdm(range(epoch+1, epochs), initial=epoch+1, desc=f"Total", unit="Epoch", dynamic_ncols=True):
 
         """Training"""
         # Set to train mode
