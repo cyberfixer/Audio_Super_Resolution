@@ -21,6 +21,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.tensorboard import SummaryWriter
 
 
 def main():
@@ -79,11 +80,12 @@ def main():
             os.makedirs(f"checkpoints/{folder}")
         except FileExistsError:
             pass
+        writer = SummaryWriter(f"checkpoints/{folder}/board")
     else:
         """this part will contain torch.load and will load all the variables needed"""
         PATH = "./checkpoints/01-14 PM 07-18-11/Epoch100_loss1476.pt"
         folder = PATH.split('/')[2]
-
+        writer = SummaryWriter(f"checkpoints/{folder}/board")
         checkpoint = torch.load(PATH)
         epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['model_state_dict'])
@@ -91,7 +93,17 @@ def main():
         _trainLoss = checkpoint['_trainloss']
         _testLoss = checkpoint['_testloss']
         _testResulte = checkpoint['_testResulte']
-
+        for i in range(len(_trainLoss)):
+            writer.add_scalars("Loss", {'Loss/train': _trainLoss[i],
+                                        'Loss/test': _testLoss[i]
+                                        }, i)
+            writer.add_scalars('Metrices', {"LSD Mean": _testResulte[0][i],
+                                            'LSD STD': _testResulte[1][i],
+                                            "LSD-High Mean": _testResulte[2][i],
+                                            'LSD-High STD': _testResulte[3][i],
+                                            "SI-SDR Mean": _testResulte[4][i],
+                                            'SI-SDR STD': _testResulte[5][i],
+                                            }, i)
         with open(f"./checkpoints/{folder}/log.txt", "a") as f:
             f.write(f"|||||||||||Reloaded the model||||||||||\n")
             f.write(f"|||||||||||Reloaded the model||||||||||\n")
@@ -129,8 +141,8 @@ def main():
         # trainloss avrage
         trainLoss /= num_samples
         # _trainLoss will contain list of the trainLoss for every epoch
-        _trainLoss = np.append(_trainLoss, trainLoss.detach().cpu())
-
+        trainLosscpu = trainLoss.detach().cpu()
+        _trainLoss = np.append(_trainLoss, trainLosscpu)
         """Testing"""
         # Set to test mode
         model.eval()
@@ -170,15 +182,24 @@ def main():
             # Compute the average loss
             testLoss /= num_samples
             # _testLoss will contain list of the testLoss for every epoch
-            _testLoss = np.append(_testLoss, testLoss.detach().cpu())
-
+            testLosscpu = testLoss.detach().cpu()
+            _testLoss = np.append(_testLoss, testLosscpu)
+            writer.add_scalars("Loss", {'Loss/train': trainLosscpu,
+                                        'Loss/test': testLosscpu
+                                        }, epoch)
             # make the list verticlly
             batchResulte = np.vstack(
                 [lsdBatch.mean(0), lsdBatch.std(0),
                  lsd_highBatch.mean(0), lsd_highBatch.std(0), sisdrBatch.mean(0), sisdrBatch.std(0)])
             # adding the batchResulte to _testResulte
             _testResulte = np.concatenate((_testResulte, batchResulte), axis=1)
-
+            writer.add_scalars('Metrices', {"LSD Mean": batchResulte[0],
+                                            'LSD STD': batchResulte[1],
+                                            "LSD-High Mean": batchResulte[2],
+                                            'LSD-High STD': batchResulte[3],
+                                            "SI-SDR Mean": batchResulte[4],
+                                            'SI-SDR STD': batchResulte[5],
+                                            }, epoch)
         # PATH of the checkpoint
         PATH = f"./checkpoints/{folder}/Epoch{epoch}_loss{int(_testLoss[-1])}.pt"
         if epoch % 25 == 0:
