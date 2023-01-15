@@ -103,7 +103,7 @@ def main():
         model.train()
         trainLoss = 0
         num_samples = 0
-        for batch, (lowSignal, targetSignal) in enumerate(tqdm(trainDataloader, desc="Epoch", unit=" batchs", dynamic_ncols=True)):
+        for batch, (lowSignal, targetSignal) in enumerate(tqdm(trainDataloader, desc="Epoch", unit=" batchs", leave=False, dynamic_ncols=True)):
             # Send to GPU
             lowSignal = lowSignal.to(device)
             targetSignal = targetSignal.to(device)

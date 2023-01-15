@@ -19,7 +19,11 @@ class CONFIG:
         val_split = 0.1
         batch_size = 2  # number of audio files per batch
         epochs = 150  # max training epochs
-        workers = 1  # number of dataloader workers
+        """
+        # 0 Single process Data Loading
+        # workers > 0 Multi process Data Loading
+        """
+        workers = 2  # number of dataloader workers
         patience = 3  # learning rate scheduler's patience
         factor = 0.5  # learning rate reduction factor
         mse_weight = 10000  # weight of the MSE loss
