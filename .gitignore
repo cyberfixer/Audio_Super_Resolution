@@ -7,3 +7,4 @@ log.txt
 data/TEMP.PY
 *.png
 notes.txt
+runs/*
