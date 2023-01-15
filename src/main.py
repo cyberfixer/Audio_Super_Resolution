@@ -80,12 +80,12 @@ def main():
             os.makedirs(f"checkpoints/{folder}")
         except FileExistsError:
             pass
-        writer = SummaryWriter(f"checkpoints/{folder}/board")
+        writer = SummaryWriter()
     else:
         """this part will contain torch.load and will load all the variables needed"""
         PATH = "./checkpoints/01-14 PM 07-18-11/Epoch100_loss1476.pt"
         folder = PATH.split('/')[2]
-        writer = SummaryWriter(f"checkpoints/{folder}/board")
+        writer = SummaryWriter()
         checkpoint = torch.load(PATH)
         epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['model_state_dict'])

@@ -111,7 +111,7 @@ class CustomDataset(Dataset):
         # stacks the windows virticlay y=(window_number, amplitude samples)
         # there was in this sliceing numpy.newaxis #,
         y = frame(target, self.window, self.stride)[:, np.newaxis, :]
-        return torch.tensor(X), torch.tensor(y)
+        return torch.tensor(X, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
 
 def main():  # ! this main is just for testing the CustomDataset class
