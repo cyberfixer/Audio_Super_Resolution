@@ -143,6 +143,7 @@ def main():
         # _trainLoss will contain list of the trainLoss for every epoch
         trainLosscpu = trainLoss.detach().cpu()
         _trainLoss = np.append(_trainLoss, trainLosscpu)
+
         """Testing"""
         # Set to test mode
         model.eval()
