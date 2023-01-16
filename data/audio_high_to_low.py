@@ -7,10 +7,10 @@ import threading
 import time
 
 inputFilesPath = './data/vctk/48k'
-outputFilesPath = './data/vctk/8k16k'
+outputFilesPath = './data/vctk/16k'
 
 targetsr = 16000
-datasr = 8000
+datasr = 16000
 
 folderinuse = []
 

@@ -16,9 +16,10 @@ from config import CONFIG
 
 # Global Variables
 
-inputAudioRoot = './data/vctk/8k/'
+inputAudioRoot = './data/vctk/8k16k/'
 inputTargetAudioRoot = './data/vctk/16k/'
-inputAudio = 'p269/p269_005_mic1.flac'
+inputAudio = 'p1/p1.flac'
+#'p269/p269_005_mic1.flac'
 inputPredictedAudioSR = 16000
 inputCheckpoint = './checkpoints/train 5 folders/Epoch50_loss1527.pt'
 
