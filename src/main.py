@@ -83,7 +83,7 @@ def main():
         writer = SummaryWriter()
     else:
         """this part will contain torch.load and will load all the variables needed"""
-        PATH = "./checkpoints/01-17 AM 11-47-52/Epoch3_loss1785.pt"
+        PATH = "./checkpoints/01-17 AM 11-47-52/Epoch13_loss1537.pt"
         folder = PATH.split('/')[2]
         writer = SummaryWriter()
         checkpoint = torch.load(PATH, map_location=device)
@@ -128,7 +128,7 @@ def main():
             lossBatch = lossfn.loss(predSignal, targetSignal)
             # the will add up the losses
             # lowSignal.size(0) is the batch size
-            trainLoss += float(lossBatch) * lowSignal.size(0)
+            trainLoss += lossBatch.detach().cpu() * lowSignal.size(0)
             num_samples += lowSignal.size(0)
             # Zero the gradients
             optimizer.zero_grad()
@@ -142,7 +142,7 @@ def main():
         # trainloss avrage
         trainLoss /= num_samples
         # _trainLoss will contain list of the trainLoss for every epoch
-        trainLosscpu = trainLoss.detach().cpu()
+        trainLosscpu = trainLoss
         _trainLoss = np.append(_trainLoss, trainLosscpu)
 
         """Testing"""
@@ -167,7 +167,7 @@ def main():
 
                 # the will add up the losses
                 # lowSignal.size(0) is the batch size
-                testLoss += float(lossBatch) * lowSignal.size(0)
+                testLoss += lossBatch.detach().cpu() * lowSignal.size(0)
                 num_samples += lowSignal.size(0)
 
                 # Calculate Metrics
@@ -184,7 +184,7 @@ def main():
             # Compute the average loss
             testLoss /= num_samples
             # _testLoss will contain list of the testLoss for every epoch
-            testLosscpu = testLoss.detach().cpu()
+            testLosscpu = testLoss
             _testLoss = np.append(_testLoss, testLosscpu)
             writer.add_scalars("Loss", {'Loss/train': trainLosscpu,
                                         'Loss/test': testLosscpu
