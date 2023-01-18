@@ -69,8 +69,8 @@ def main():
     epochs = 500
     epoch = 0
     # this variable will determen that is new train or will load a model
-    newTrain = False
-    if newTrain == True:
+    newTrain = True
+    if newTrain == False:
         now = datetime.now()  # current date and time
         # folder name for the checkpoints
         # strftime convert time to string
@@ -83,16 +83,17 @@ def main():
         writer = SummaryWriter()
     else:
         """this part will contain torch.load and will load all the variables needed"""
-        PATH = "./checkpoints/01-14 PM 07-18-11/Epoch100_loss1476.pt"
+        PATH = "./checkpoints/01-17 AM 11-47-52/Epoch3_loss1785.pt"
         folder = PATH.split('/')[2]
         writer = SummaryWriter()
-        checkpoint = torch.load(PATH)
+        checkpoint = torch.load(PATH, map_location=device)
         epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         _trainLoss = checkpoint['_trainloss']
         _testLoss = checkpoint['_testloss']
         _testResulte = checkpoint['_testResulte']
+        del checkpoint
         for i in range(len(_trainLoss)):
             writer.add_scalars("Loss", {'Loss/train': _trainLoss[i],
                                         'Loss/test': _testLoss[i]
@@ -127,7 +128,7 @@ def main():
             lossBatch = lossfn.loss(predSignal, targetSignal)
             # the will add up the losses
             # lowSignal.size(0) is the batch size
-            trainLoss += lossBatch * lowSignal.size(0)
+            trainLoss += float(lossBatch) * lowSignal.size(0)
             num_samples += lowSignal.size(0)
             # Zero the gradients
             optimizer.zero_grad()
@@ -153,7 +154,7 @@ def main():
             sisdrBatch = np.empty(0)
             testLoss = 0
             num_samples = 0
-            for batch, (lowSignal, targetSignal) in enumerate(testDataloader):
+            for batch, (lowSignal, targetSignal) in enumerate(tqdm(testDataloader, desc="Test", unit=" batchs", leave=False, dynamic_ncols=True)):
                 # Send to GPU
                 lowSignal = lowSignal.to(device)
                 targetSignal = targetSignal.to(device)
@@ -166,7 +167,7 @@ def main():
 
                 # the will add up the losses
                 # lowSignal.size(0) is the batch size
-                testLoss += lossBatch * lowSignal.size(0)
+                testLoss += float(lossBatch) * lowSignal.size(0)
                 num_samples += lowSignal.size(0)
 
                 # Calculate Metrics
@@ -203,15 +204,14 @@ def main():
                                             }, epoch)
         # PATH of the checkpoint
         PATH = f"./checkpoints/{folder}/Epoch{epoch}_loss{int(_testLoss[-1])}.pt"
-        if epoch % 25 == 0:
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                '_trainloss': _trainLoss,
-                '_testloss': _testLoss,
-                '_testResulte': _testResulte
-            }, PATH)
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            '_trainloss': _trainLoss,
+            '_testloss': _testLoss,
+            '_testResulte': _testResulte
+        }, PATH)
 
         # this will make log.txt file
         with open(f"./checkpoints/{folder}/log.txt", "a") as f:

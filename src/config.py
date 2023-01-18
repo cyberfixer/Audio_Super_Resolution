@@ -1,7 +1,5 @@
 # This file will have the global variables for the model
 # Any setting should be here
-import torch
-from torch import nn
 
 # This just outline for the config file from the TUNet repo.
 
@@ -22,7 +20,7 @@ class CONFIG:
         # 0 Single process Data Loading
         # workers > 0 Multi process Data Loading
         """
-        workers = 0  # number of dataloader workers
+        workers = 2  # number of dataloader workers
         patience = 3  # learning rate scheduler's patience
         factor = 0.5  # learning rate reduction factor
         mse_weight = 10000  # weight of the MSE loss
