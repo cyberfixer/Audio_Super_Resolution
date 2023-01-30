@@ -16,11 +16,11 @@ from config import CONFIG
 
 # Global Variables
 
-inputAudioRoot = './data/vctk/8k16k/'
-inputTargetAudioRoot = './data/vctk/16k/'
+inputAudioRoot = './data/FD/8k16k/'
+inputTargetAudioRoot = './data/FD/16k/'
 inputAudioTextFile = './data/test.txt'
 inputPredictedAudioSR = 16000
-inputCheckpoint = './checkpoints/train 5 folders/Epoch50_loss1527.pt'
+inputCheckpoint = './checkpoints/01-17 AM 11-47-52/Epoch140_loss1301.pt'
 
 outputFolder = './output/'
 
