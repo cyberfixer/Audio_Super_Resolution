@@ -1,9 +1,7 @@
 # known libraries
 from timeit import default_timer as timer
-import librosa
 import os
 import numpy as np
-from termcolor import colored as color
 from tqdm.auto import tqdm
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -18,7 +16,6 @@ import metrices as m
 
 # torch libraries
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.tensorboard import SummaryWriter
@@ -83,7 +80,7 @@ def main():
         writer = SummaryWriter()
     else:
         """this part will contain torch.load and will load all the variables needed"""
-        PATH = "./checkpoints/01-17 AM 11-47-52/Epoch13_loss1537.pt"
+        PATH = "./checkpoints/01-17 AM 11-47-52/Epoch116_loss1307.pt"
         folder = PATH.split('/')[2]
         writer = SummaryWriter()
         checkpoint = torch.load(PATH, map_location=device)
@@ -105,6 +102,7 @@ def main():
                                             "SI-SDR Mean": _testResulte[4][i],
                                             'SI-SDR STD': _testResulte[5][i],
                                             }, i)
+        writer.close()
         with open(f"./checkpoints/{folder}/log.txt", "a") as f:
             f.write(f"|||||||||||Reloaded the model||||||||||\n")
             f.write(f"|||||||||||Reloaded the model||||||||||\n")
@@ -202,6 +200,7 @@ def main():
                                             "SI-SDR Mean": batchResulte[4],
                                             'SI-SDR STD': batchResulte[5],
                                             }, epoch)
+            writer.close()
         # PATH of the checkpoint
         PATH = f"./checkpoints/{folder}/Epoch{epoch}_loss{int(_testLoss[-1])}.pt"
         torch.save({

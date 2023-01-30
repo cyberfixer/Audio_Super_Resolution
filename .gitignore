@@ -8,3 +8,4 @@ data/TEMP.PY
 *.png
 notes.txt
 runs/*
+src/evaluate.py
