@@ -69,7 +69,7 @@ def main():
     epochs = 500
     epoch = 0
     # this variable will determen that is new train or will load a model
-    newTrain = True
+    newTrain = False
     if newTrain == False:
         now = datetime.now()  # current date and time
         # folder name for the checkpoints
