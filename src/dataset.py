@@ -89,8 +89,13 @@ class CustomDataset(Dataset):
         return target
 
     def __getitem__(self, index):
-        low_sig, _ = librosa.load(self.data_list_low[index], sr=None)
-        target, _ = librosa.load(self.data_list_target[index], sr=None)
+        low_sig = 0
+        target = 0
+        try:
+            low_sig, _ = librosa.load(self.data_list_low[index], sr=None)
+            target, _ = librosa.load(self.data_list_target[index], sr=None)
+        except:
+            print('Error: ', target)
 
         if len(low_sig) < self.window:
             # padding if the window is longer than the signal

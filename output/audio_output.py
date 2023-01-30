@@ -18,8 +18,7 @@ from config import CONFIG
 
 inputAudioRoot = './data/vctk/8k16k/'
 inputTargetAudioRoot = './data/vctk/16k/'
-inputAudio = 'p1/p1.flac'
-#'p269/p269_005_mic1.flac'
+inputAudioTextFile = './data/test.txt'
 inputPredictedAudioSR = 16000
 inputCheckpoint = './checkpoints/train 5 folders/Epoch50_loss1527.pt'
 
@@ -28,6 +27,16 @@ outputFolder = './output/'
 
 # Device agnostic code
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# Load the model
+model = TUNet().to(device)
+checkpoint = torch.load(inputCheckpoint, map_location=device)
+
+model.load_state_dict(checkpoint['model_state_dict'])
+epoch = checkpoint['epoch']
+
+# Set model to evaluation mode
+model.eval()
 
 def getAudio(relpath):
     low_sig, low_sig_sr = librosa.load(os.path.join(inputAudioRoot + relpath), sr=None)
@@ -76,13 +85,13 @@ def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal, spectrogram=
     fig = plt.figure(figsize=(15, 8))
 
     # LOW SIGNAL SUBPLOT
-    plotSpectrogram(fig, 'Low', lowSignal, inputPredictedAudioSR, 1)
+    plotSpectrogram(fig, 'Low', lowSignal, inputPredictedAudioSR, 1, False)
 
     # PREDICTED SIGNAL SUBPLOT
-    plotSpectrogram(fig, 'Predicted', predictedSignal, inputPredictedAudioSR, 2)
+    plotSpectrogram(fig, 'Predicted', predictedSignal, inputPredictedAudioSR, 2, False)
 
     # TARGET SIGNAL SUBPLOT
-    plotSpectrogram(fig, 'Target', highSignal, inputPredictedAudioSR, 3)
+    plotSpectrogram(fig, 'Target', highSignal, inputPredictedAudioSR, 3, False)
 
     plt.subplots_adjust(wspace=0.15)
     plt.savefig(os.path.join(folderPath, 'fig'))
@@ -113,21 +122,12 @@ def combineWindows(verticalSignal:torch.Tensor,inputAudioLen):
     return horizontalSignal.numpy()
 
 
-def main():
+def main(inputAudio):
 
-    # Load the model
-    model = TUNet().to(device)
-    checkpoint = torch.load(inputCheckpoint, map_location=device)
-
-    model.load_state_dict(checkpoint['model_state_dict'])
-    epoch = checkpoint['epoch']
 
     # Get the source audio
     windowedLowSignal, lowSignal, highSignal = getAudio(inputAudio)
     windowedLowSignal = windowedLowSignal.to(device)
-
-    # Set model to evaluation mode
-    model.eval()
 
     with torch.inference_mode():
         # Predict signal using the model
@@ -141,4 +141,6 @@ def main():
         saveAudioAndSpectrogram(lowSignal,horizontalPredSig,highSignal)
     
 if __name__ == '__main__':
-    main()
+    file = open(inputAudioTextFile,'r')
+    for relFilePath in file.readlines():
+        main(relFilePath)
