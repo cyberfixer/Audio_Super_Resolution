@@ -8,5 +8,5 @@ data/TEMP.PY
 *.png
 notes.txt
 runs/*
-src/evaluate.py
-data/FD.zip
+FD.zip
+metrices.txt

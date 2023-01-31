@@ -45,7 +45,7 @@ class CONFIG:
             heads = 2
 
     class DATA:
-        dataset = 'vctk'  # dataset to use. Should either be 'vctk' or 'vivos'
+        dataset = 'FD'  # dataset to use. Should either be 'vctk' or 'vivos'
         '''
         Dictionary that specifies paths to root directories and train/test text files of each datasets.
         'root' is the path to the dataset and each line of the train.txt/test.txt files should contains the path to an
@@ -55,7 +55,10 @@ class CONFIG:
                              'train': "./data/train.txt",
                              'trainlow': "./data/trainlow.txt"
                              },
-
+                    "FD":{'root': './data/FD',
+                             'train': "./data/train.txt",
+                             'trainlow': "./data/trainlow.txt"
+                             },
                     }
         window_size = 8192  # size of the sliding window
         # stride of the sliding window. Should be divisible to 'mask_chunk' if the task is MSM.

@@ -16,13 +16,13 @@ from config import CONFIG
 
 # Global Variables
 
-inputAudioRoot = './data/FD/8k16k/'
-inputTargetAudioRoot = './data/FD/16k/'
+inputAudioRoot = './data/FD'
+inputTargetAudioRoot = './data/FD/16k'
 inputAudioTextFile = './data/test.txt'
 inputPredictedAudioSR = 16000
-inputCheckpoint = './checkpoints/01-17 AM 11-47-52/Epoch140_loss1301.pt'
+inputCheckpoint = './checkpoints/01-17 AM 11-47-52/Epoch110_loss1314.pt'
 
-outputFolder = './output/'
+outputFolder = './output/FD'
 
 
 # Device agnostic code
@@ -39,8 +39,8 @@ epoch = checkpoint['epoch']
 model.eval()
 
 def getAudio(relpath):
-    low_sig, low_sig_sr = librosa.load(os.path.join(inputAudioRoot + relpath), sr=None)
-    high_sig, _ = librosa.load(os.path.join(inputTargetAudioRoot + relpath), sr=None)
+    low_sig, low_sig_sr = librosa.load(os.path.join(inputAudioRoot , relpath), sr=None)
+    high_sig, _ = librosa.load(os.path.join(inputTargetAudioRoot , relpath.replace("8k16k/","")), sr=None)
 
     # Upsample Audio
     low_sig = librosa.resample(low_sig, orig_sr=low_sig_sr, target_sr=inputPredictedAudioSR)
@@ -61,12 +61,12 @@ def plotSpectrogram(fig, title, data, sr, index):
 
         # Plot the spectrogram
         fig.add_subplot(1,3,index)
-        librosa.display.specshow(stft_db, x_axis='time', y_axis='linear', sr=sr)
+        librosa.display.specshow(stft_db,cmap="magma", x_axis='time', y_axis='linear', sr=sr)
         plt.colorbar()
         plt.title(title)
         plt.tight_layout()
 
-def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal, spectrogram=True):
+def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal,inputAudio, spectrogram=True):
     # Get the folder name and file extension
     folderName, fileExtension = os.path.splitext(os.path.basename(inputAudio))
     fileExtension = fileExtension[1:] # remove the . from the file extension
@@ -85,21 +85,21 @@ def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal, spectrogram=
     fig = plt.figure(figsize=(15, 8))
 
     # LOW SIGNAL SUBPLOT
-    plotSpectrogram(fig, 'Low', lowSignal, inputPredictedAudioSR, 1, False)
+    plotSpectrogram(fig, 'Low', lowSignal, inputPredictedAudioSR, 1)
 
     # PREDICTED SIGNAL SUBPLOT
-    plotSpectrogram(fig, 'Predicted', predictedSignal, inputPredictedAudioSR, 2, False)
+    plotSpectrogram(fig, 'Predicted', predictedSignal, inputPredictedAudioSR, 2)
 
     # TARGET SIGNAL SUBPLOT
-    plotSpectrogram(fig, 'Target', highSignal, inputPredictedAudioSR, 3, False)
+    plotSpectrogram(fig, 'Target', highSignal, inputPredictedAudioSR, 3)
 
     plt.subplots_adjust(wspace=0.15)
     plt.savefig(os.path.join(folderPath, 'fig'))
-    
-    if spectrogram:
-        plt.show()
+    plt.close()
+    # if spectrogram:
+    #     plt.show()
 
-def overlap_add(audioData:torch.Tensor, win_len, hop_size, target_shape) -> torch.Tensor: # ! IT CUTS OFF AT THE END
+def overlap_add(audioData:torch.Tensor, win_len, hop_size, target_shape) -> torch.Tensor: 
     # target.shape = (B, C, seq_len) = (Batch, Channels, seq_len)
     # x.shape = (B*n_chunks, C, win_len) , n_chunks = (seq_len - hop_size)/(win_len - hop_size)
     bs, channels, seq_len = target_shape
@@ -138,9 +138,9 @@ def main(inputAudio):
         horizontalPredSig = combineWindows(predictedSignal, len(lowSignal))
 
         # Save audio and show spectrogram
-        saveAudioAndSpectrogram(lowSignal,horizontalPredSig,highSignal)
+        saveAudioAndSpectrogram(lowSignal,horizontalPredSig,highSignal,inputAudio)
     
 if __name__ == '__main__':
     file = open(inputAudioTextFile,'r')
     for relFilePath in file.readlines():
-        main(relFilePath)
+        main(relFilePath.strip('\n'))
