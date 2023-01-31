@@ -6,6 +6,7 @@ import librosa.display
 import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # Below modules will not be imported without this
 import sys
@@ -16,11 +17,11 @@ from config import CONFIG
 
 # Global Variables
 
-inputAudioRoot = './data/FD'
+inputAudioRoot = './data/FD/8k16k'
 inputTargetAudioRoot = './data/FD/16k'
 inputAudioTextFile = './data/test.txt'
 inputPredictedAudioSR = 16000
-inputCheckpoint = './checkpoints/01-17 AM 11-47-52/Epoch110_loss1314.pt'
+inputCheckpoint = './checkpoints/01-17 AM 11-47-52/Epoch140_loss1301.pt'
 
 outputFolder = './output/FD'
 
@@ -39,7 +40,7 @@ epoch = checkpoint['epoch']
 model.eval()
 
 def getAudio(relpath):
-    low_sig, low_sig_sr = librosa.load(os.path.join(inputAudioRoot , relpath), sr=None)
+    low_sig, low_sig_sr = librosa.load(os.path.join(inputAudioRoot , relpath.replace("8k16k/","")), sr=None)
     high_sig, _ = librosa.load(os.path.join(inputTargetAudioRoot , relpath.replace("8k16k/","")), sr=None)
 
     # Upsample Audio
@@ -66,7 +67,7 @@ def plotSpectrogram(fig, title, data, sr, index):
         plt.title(title)
         plt.tight_layout()
 
-def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal,inputAudio, spectrogram=True):
+def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal, inputAudio, spectrogram=True):
     # Get the folder name and file extension
     folderName, fileExtension = os.path.splitext(os.path.basename(inputAudio))
     fileExtension = fileExtension[1:] # remove the . from the file extension
@@ -74,7 +75,7 @@ def saveAudioAndSpectrogram(lowSignal, predictedSignal, highSignal,inputAudio, s
 
     # Create Folders if missing
     if os.path.isdir(folderPath) is not True:
-        os.mkdir(folderPath)
+        os.mkdir(folderPath) # ! BUG It doesn't create the folder
     
     # Save the files
     sf.write(os.path.join(folderPath,'low'+'.'+fileExtension) , data=lowSignal,samplerate=inputPredictedAudioSR, format=fileExtension)
@@ -142,5 +143,5 @@ def main(inputAudio):
     
 if __name__ == '__main__':
     file = open(inputAudioTextFile,'r')
-    for relFilePath in file.readlines():
+    for relFilePath in tqdm(file.readlines(), desc='Generating Output', unit="files", leave=False, dynamic_ncols=True):
         main(relFilePath.strip('\n'))
