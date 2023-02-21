@@ -1,7 +1,5 @@
-
-from dtw import dtw
+import os
 import numpy as np
-
 import torch
 from tqdm.auto import tqdm
 from config import CONFIG
@@ -11,6 +9,9 @@ from loss import addedLoss as loss
 import metrices as m
 from torch.utils.data import DataLoader
 
+PATH = "./checkpoints/01-17 AM 11-47-52/Epoch140_loss1301.pt"
+outputfolder = "asc 140epochs"
+os.mkdir(f"./output/{outputfolder}")
 # device agnastic code
 device = "cuda" if torch.cuda.is_available() else "cpu"
 # creating the model and sending it to the device
@@ -28,7 +29,7 @@ testDataloader = DataLoader(
     num_workers=0,
     pin_memory=True,
 )
-PATH = "./checkpoints/01-17 AM 11-47-52/Epoch140_loss1301.pt"
+
 checkpoint = torch.load(PATH, map_location=device)
 model.load_state_dict(checkpoint['model_state_dict'])
 testLoss = 0
@@ -71,7 +72,7 @@ with torch.inference_mode():
          sisdrBatch.mean(0), sisdrBatch.std(0)])
     
     # log the metrices to text file 
-    with open(f"./output/FD 140epochs/metrices.txt", "a") as f:
+    with open(f"./output/{outputfolder}/metrices.txt", "a") as f:
             f.write(f"Test Loss: {testLoss:.5f}\n")
             f.write(f"LSD Mean: {batchResulte[0]}\n")
             f.write(f"LSD STD: {batchResulte[1]}\n")

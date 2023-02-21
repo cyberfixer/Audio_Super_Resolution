@@ -4,7 +4,7 @@
 import os
 from tqdm import tqdm
 
-rootDataSet = './data/FD/'
+rootDataSet = './data/asc/'
 
 
 def listerTrainTarget(samplingRateFolderName):

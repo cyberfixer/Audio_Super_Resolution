@@ -45,7 +45,7 @@ class CONFIG:
             heads = 2
 
     class DATA:
-        dataset = 'FD'  # dataset to use. Should either be 'vctk' or 'vivos'
+        dataset = 'asc'  # dataset to use. Should either be 'vctk' or 'vivos'
         '''
         Dictionary that specifies paths to root directories and train/test text files of each datasets.
         'root' is the path to the dataset and each line of the train.txt/test.txt files should contains the path to an
@@ -55,7 +55,11 @@ class CONFIG:
                              'train': "./data/train.txt",
                              'trainlow': "./data/trainlow.txt"
                              },
-                    "FD":{'root': './data/FD',
+                    "FD":   {'root': './data/FD',
+                             'train': "./data/train.txt",
+                             'trainlow': "./data/trainlow.txt"
+                             },
+                    "asc":  {'root': './data/asc',
                              'train': "./data/train.txt",
                              'trainlow': "./data/trainlow.txt"
                              },

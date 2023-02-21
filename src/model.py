@@ -9,17 +9,6 @@ from torch.utils.data import DataLoader
 from performer_pytorch import Performer
 # TODO: rename the class of the model. if you change it remember to change the import in main.py
 
-
-class SSAR(nn.Module):
-    def __init__(self):
-        super().__init__()
-        # TODO:need to add layers
-
-    def forward(self, x):
-        pass
-        # TODO:need define forward
-
-
 class TUNet(nn.Module):
     def __init__(self):
         super(TUNet, self).__init__()

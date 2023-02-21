@@ -10,3 +10,5 @@ notes.txt
 runs/*
 FD.zip
 metrices.txt
+*.wav
+output/FD 140epochs.zip

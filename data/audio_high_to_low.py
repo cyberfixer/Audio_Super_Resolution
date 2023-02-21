@@ -6,8 +6,8 @@ import os
 import threading
 import time
 
-inputFilesPath = './data/FD/48k'
-outputFilesPath = './data/FD/16k'
+inputFilesPath = './data/asc/48k'
+outputFilesPath = './data/asc/16k'
 
 targetsr = 16000
 datasr = 16000
